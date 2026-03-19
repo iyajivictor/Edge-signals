@@ -392,7 +392,6 @@ def main():
 
     # Send alerts & log
     print(f"\n[3/3] Sending alerts...")
-    send_telegram({"pair":"EURUSD","side":"BUY","entry":1.10,"sl":1.09,"tp":1.12,"level":1.095,"sl_pips":100,"rr":2.0,"time":"test"})
     if signals_fired:
         for sig in signals_fired:
             send_telegram(sig)
