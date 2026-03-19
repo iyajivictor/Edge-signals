@@ -1,9 +1,17 @@
 {
   "price_history": {
-    "EURUSD": [],
-    "GBPUSD": [],
-    "USDJPY": [],
-    "AUDJPY": []
+    "EURUSD": [
+      1.15801
+    ],
+    "GBPUSD": [
+      1.34284
+    ],
+    "USDJPY": [
+      157.85
+    ],
+    "AUDJPY": [
+      111.848
+    ]
   },
   "active_setups": {},
   "fired_signals": []
