@@ -1,4 +1,4 @@
-name: EDGE Signal Engine
+srcDGE Signal Engine
 
 on:
   schedule:
@@ -35,7 +35,7 @@ jobs:
           FCS_API_KEY: ${{ secrets.FCS_API_KEY }}
           TG_TOKEN:    ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID:  ${{ secrets.TG_CHAT_ID }}
-        run: python src/signal_engine.py
+        run: python signal_engine.py
 
       - name: Save price history cache
         uses: actions/cache@v4
