@@ -1,4 +1,4 @@
-srcDGE Signal Engine
+name: EDGE Signal Engine
 
 on:
   schedule:
@@ -9,18 +9,16 @@ jobs:
   run-signal-engine:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Restore price history cache
+      - name: Restore cache
         uses: actions/cache@v4
         with:
           path: state/
           key: edge-state-${{ runner.os }}
-          restore-keys: |
-            edge-state-
+          restore-keys: edge-state-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,14 +28,14 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run EDGE Signal Engine
+      - name: Run signal engine
         env:
           FCS_API_KEY: ${{ secrets.FCS_API_KEY }}
-          TG_TOKEN:    ${{ secrets.TG_TOKEN }}
-          TG_CHAT_ID:  ${{ secrets.TG_CHAT_ID }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python signal_engine.py
 
-      - name: Save price history cache
+      - name: Save cache
         uses: actions/cache@v4
         with:
           path: state/
@@ -46,8 +44,8 @@ jobs:
       - name: Commit signal log
         run: |
           git config --local user.email "edge-bot@github.com"
-          git config --local user.name "EDGE Signal Bot"
+          git config --local user.name "EDGE Bot"
           git add state/signals_log.csv || true
-          git diff --staged --quiet || git commit -m "Signal log update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git diff --staged --quiet || git commit -m "Signal log update"
           git push || true
         continue-on-error: true
