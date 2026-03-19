@@ -45,7 +45,7 @@ jobs:
         run: |
           git config --local user.email "edge-bot@github.com"
           git config --local user.name "EDGE Bot"
-          git add state/signals_log.csv || true
+          git add state/ || true
           git diff --staged --quiet || git commit -m "Signal log update"
           git push || true
         continue-on-error: true
