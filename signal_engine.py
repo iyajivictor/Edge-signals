@@ -354,7 +354,7 @@ def main():
     if not prices:
         print("  No prices returned — check FCS API key")
         return
-      send_telegram({"pair":"TEST","side":"BUY","entry":1.1000,"sl":1.0900,"tp":1.1200,"level":1.0950,"sl_pips":100,"rr":2.0,"time":"test"})
+        send_telegram({"pair":"TEST","side":"BUY","entry":1.1000,"sl":1.0900,"tp":1.1200,"level":1.0950,"sl_pips":100,"rr":2.0,"time":"test"})
 
     for pair, data in prices.items():
         print(f"  {pair}: {data['price']:.{DP[pair]}f}  ({data['change']:+.2f}%)")
