@@ -1,4 +1,4 @@
-
+"""
 EDGE Signal Engine
 ==================
 Break & Retest signal detector for:
