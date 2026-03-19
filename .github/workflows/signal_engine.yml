@@ -1,4 +1,4 @@
-name: EDGE Signal Engine
+: EDGE Signal Engine
 
 on:
   schedule:
@@ -41,11 +41,11 @@ jobs:
           path: state/
           key: edge-state-${{ runner.os }}
 
-      - name: Commit signal log
+      - name: Save state to repo
         run: |
           git config --local user.email "edge-bot@github.com"
           git config --local user.name "EDGE Bot"
           git add state/ || true
-          git diff --staged --quiet || git commit -m "Signal log update"
-          git push || true
+          git diff --staged --quiet || git commit -m "Update state $(date -u '+%Y-%m-%d %H:%M')"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git || true
         continue-on-error: true
