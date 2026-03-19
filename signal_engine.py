@@ -65,6 +65,14 @@ SIGNALS_LOG  = Path("state/signals_log.csv")
 # ══════════════════════════════════════════════
 #  1. FETCH LIVE PRICES
 # ══════════════════════════════════════════════
+def safe_float(val):
+    """Convert FCS API values to float — handles '+0.16%', '-0.5%', etc."""
+    try:
+        if val is None: return 0.0
+        return float(str(val).replace('%','').replace('+','').strip())
+    except:
+        return 0.0
+
 def fetch_prices():
     """Fetch current bid/ask/high/low for all pairs from FCS API."""
     symbols = ",".join(FCS_SYMBOLS.values())
@@ -79,10 +87,10 @@ def fetch_prices():
                              if v.replace("/","") == item.get("s","") or v == item.get("s","")), None)
                 if pair:
                     prices[pair] = {
-                        "price":  float(item.get("c", 0)),
-                        "high":   float(item.get("h", 0)),
-                        "low":    float(item.get("l", 0)),
-                        "change": float(item.get("cp", 0)),
+                        "price":  safe_float(item.get("c", 0)),
+                        "high":   safe_float(item.get("h", 0)),
+                        "low":    safe_float(item.get("l", 0)),
+                        "change": safe_float(item.get("cp", 0)),
                         "time":   datetime.now(timezone.utc).isoformat(),
                     }
         return prices
