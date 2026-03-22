@@ -2,7 +2,7 @@
 EDGE Signal Engine
 ==================
 Break & Retest signal detector for:
-  EURUSD, GBPUSD, USDJPY, AUDJPY
+  EURUSD, XAUUSD, GBPUSD, USDJPY, AUDJPY
   M15 timeframe | 1:2 RR | Trend-filtered
 
 Runs every 15 minutes via GitHub Actions.
@@ -25,11 +25,12 @@ TG_TOKEN     = os.environ.get("TG_TOKEN",     "")
 TG_CHAT_ID   = os.environ.get("TG_CHAT_ID",   "")
 
 # ── Trading pairs (the 4 that passed real backtest) ──
-PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "AUDJPY"]
+PAIRS = ["EURUSD", "XAUUSD", "GBPUSD", "USDJPY", "AUDJPY"]
 
 # ── FCS API symbol map ──
 FCS_SYMBOLS = {
     "EURUSD": "EUR/USD",
+    "XAUUSD": "XAU/USD",
     "GBPUSD": "GBP/USD",
     "USDJPY": "USD/JPY",
     "AUDJPY": "AUD/JPY",
@@ -38,12 +39,14 @@ FCS_SYMBOLS = {
 # ── Pip config ──
 PIP_SIZE = {
     "EURUSD": 0.0001,
+    "XAUUSD": 0.10,
     "GBPUSD": 0.0001,
     "USDJPY": 0.01,
     "AUDJPY": 0.01,
 }
 DP = {
     "EURUSD": 5,
+    "XAUUSD": 2,
     "GBPUSD": 5,
     "USDJPY": 3,
     "AUDJPY": 3,
