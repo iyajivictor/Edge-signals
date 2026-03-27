@@ -180,7 +180,6 @@ def detect_trend(closes, sh, sl, n=TREND_N):
     return "neutral"
 
 def run_signal_check(pair, candles, active_setups):
-    """Run B&R check on OHLC candle history."""
     if len(candles) < CANDLES_NEEDED:
         print(f"  [{pair}] Only {len(candles)} candles — need {CANDLES_NEEDED} minimum")
         return None
@@ -205,11 +204,19 @@ def run_signal_check(pair, candles, active_setups):
 
     # ── Check retest entry ──
     if setup:
+        # Must be at least 1 candle after the breakout candle
+        candles_since_break = (n - 1) - setup.get("breakout_idx", 0)
+        if candles_since_break < 1:
+            print(f"  [{pair}] Waiting — breakout candle not yet closed")
+            return None
+
         lv = setup["level"]
+
         if setup["dir"] == "long":
-            touched = cur <= lv + tol
-            held    = cur > lv - tol
-            if touched and held:
+            # Wick can pierce below, but body (close) must be above the level
+            pulled_back = cur <= lv + tol   # price came back to the level
+            body_above  = cur > lv          # close confirms above the level
+            if pulled_back and body_above:
                 sl_p = setup["sl"]
                 risk = cur - sl_p
                 if risk > pip * 3:
@@ -226,10 +233,12 @@ def run_signal_check(pair, candles, active_setups):
                         "rr":      rr,
                         "time":    datetime.now(timezone.utc).isoformat(),
                     }
+
         else:  # short
-            touched = cur >= lv - tol
-            held    = cur < lv + tol
-            if touched and held:
+            # Wick can pierce above, but body (close) must be below the level
+            pulled_back = cur >= lv - tol   # price came back to the level
+            body_below  = cur < lv          # close confirms below the level
+            if pulled_back and body_below:
                 sl_p = setup["sl"]
                 risk = sl_p - cur
                 if risk > pip * 3:
@@ -257,7 +266,7 @@ def run_signal_check(pair, candles, active_setups):
                 if (n - 1) - (last_sh + SWING_LB) <= BREAK_WINDOW and cur > closes[last_sh]:
                     valid_sl = [s for s in sl if s + SWING_LB <= n - 1]
                     if valid_sl:
-                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — watching for retest")
+                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest candle")
                         active_setups[pair] = {
                             "dir":          "long",
                             "level":        closes[last_sh],
@@ -272,7 +281,7 @@ def run_signal_check(pair, candles, active_setups):
                 if (n - 1) - (last_sl + SWING_LB) <= BREAK_WINDOW and cur < closes[last_sl]:
                     valid_sh = [s for s in sh if s + SWING_LB <= n - 1]
                     if valid_sh:
-                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — watching for retest")
+                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest candle")
                         active_setups[pair] = {
                             "dir":          "short",
                             "level":        closes[last_sl],
