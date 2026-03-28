@@ -1,4 +1,4 @@
-name: EDGE Signal Engine
+requestsests: EDGE Signal Engine
 
 on:
   repository_dispatch:
@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests gspread google-auth
 
       - name: Run signal engine
         env:
