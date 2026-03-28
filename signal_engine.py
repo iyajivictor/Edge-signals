@@ -345,9 +345,39 @@ def log_signal(signal):
             f"{signal['entry']},{signal['sl']},{signal['tp']},"
             f"{signal['sl_pips']},{signal['rr']},{signal['level']}\n"
         )
+# ══════════════════════════════════════════════
+#  7. SHEET LOGGER
+# ══════════════════════════════════════════════
+def log_signal_to_sheet(signal):
+    """Write new signal to Google Sheet as PENDING."""
+    try:
+        creds_dict = json.loads(os.environ.get("GOOGLE_CREDENTIALS", "{}"))
+        creds = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        client = gspread.authorize(creds)
+        sheet  = client.open_by_key(os.environ.get("SHEET_ID", "")).sheet1
+
+        sheet.append_row([
+            signal["time"],
+            signal["pair"],
+            signal["side"],
+            signal["entry"],
+            signal["sl"],
+            signal["tp"],
+            signal["rr"],
+            signal["sl_pips"],
+            "PENDING",
+            "",
+            "",
+        ])
+        print(f"  [SHEET] ✓ Signal logged for {signal['pair']}")
+    except Exception as e:
+        print(f"  [SHEET] ✗ Sheet log error: {e}")
 
 # ══════════════════════════════════════════════
-#  7. DUPLICATE GUARD
+#  8. DUPLICATE GUARD
 # ══════════════════════════════════════════════
 def is_duplicate(signal, fired_signals):
     sig_id = f"{signal['pair']}_{signal['side']}_{round(signal['level'], 4)}"
@@ -369,7 +399,7 @@ def is_duplicate(signal, fired_signals):
     return False
 
 # ══════════════════════════════════════════════
-#  8. MAIN
+#  9. MAIN
 # ══════════════════════════════════════════════
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -432,6 +462,7 @@ def main():
         for sig in signals_fired:
             send_telegram(sig)
             log_signal(sig)
+            log_signal_to_sheet(sig)
             print(f"  ✓ {sig['side']} {sig['pair']} logged")
     else:
         print("  No new signals this run")
