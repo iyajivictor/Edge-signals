@@ -17,6 +17,8 @@ import json
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
+from google.oauth2.service_account import Credentials
+import gspread
 
 # ══════════════════════════════════════════════
 #  CONFIG  — set these as GitHub Secrets
