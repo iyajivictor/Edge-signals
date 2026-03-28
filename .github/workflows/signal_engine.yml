@@ -1,4 +1,4 @@
-requestsests: EDGE Signal Engine
+name: EDGE Signal Engine
 
 on:
   repository_dispatch:
