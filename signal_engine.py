@@ -5,16 +5,23 @@ Break & Retest signal detector for:
   USDJPY (primary), GBPUSD, AUDJPY  — active B&R strategy
   XAUUSD, EURUSD                    — data collection only
 
-  M15 timeframe | 1:2 RR | Trend-filtered
+  M15 timeframe | 1:2 RR (XAUUSD 1:3) | Trend-filtered
 
 Runs every 15 minutes via GitHub Actions + cron-job.org
 Sends Telegram alerts when a signal fires.
 Logs all signals to state/signals_log.csv
+
+Changes vs previous version:
+  - TREND_N reduced 3 → 2 (less strict trend confirmation)
+  - SL placement uses swing close + 0.25x ATR14 buffer (not wicks)
+  - Swing detection remains close-based (unchanged)
+  - RETEST_WINDOW unchanged at 30 candles
 """
 
 import os
 import json
 import requests
+import numpy as np
 from datetime import datetime, timezone
 from pathlib import Path
 from google.oauth2.service_account import Credentials
@@ -28,10 +35,10 @@ TG_TOKEN        = os.environ.get("TG_TOKEN",        "")
 TG_CHAT_ID      = os.environ.get("TG_CHAT_ID",      "")
 
 # ── Active strategy pairs ──
-STRATEGY_PAIRS = ["USDJPY", "GBPUSD", "AUDJPY"]
+STRATEGY_PAIRS = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD"]
 
 # ── Data collection only (no signals) ──
-DATA_ONLY_PAIRS = ["XAUUSD", "EURUSD"]
+DATA_ONLY_PAIRS = ["EURUSD"]
 
 # ── All pairs combined ──
 PAIRS = STRATEGY_PAIRS + DATA_ONLY_PAIRS
@@ -66,14 +73,19 @@ RR_MAP = {
     "USDJPY": 2.0,
     "GBPUSD": 2.0,
     "AUDJPY": 2.0,
+    "XAUUSD": 3.0,
 }
 SWING_LB       = 5
 RETEST_TOL     = 0.0008
 RETEST_WINDOW  = 30
-TREND_N        = 3
+TREND_N        = 2        # changed: 3 → 2
 BREAK_WINDOW   = 20
 CANDLES_NEEDED = 200
-MAX_HISTORY    = 1344   # ~2 weeks of M15 candles
+MAX_HISTORY    = 1344     # ~2 weeks of M15 candles
+
+# ── ATR-based SL buffer ──
+ATR_PERIOD     = 14
+ATR_MULT       = 0.25     # SL = swing close ± 0.25 × ATR14
 
 # ── State files ──
 STATE_FILE  = Path("state/price_history.json")
@@ -141,24 +153,36 @@ def save_state(state):
 
 # ══════════════════════════════════════════════
 #  3. MERGE CANDLES
-#     Merge newly fetched candles into stored
-#     history without duplicates
 # ══════════════════════════════════════════════
 def merge_candles(stored, fetched, max_size=MAX_HISTORY):
-    """Merge fetched candles into stored history, deduplicate by time."""
     existing_times = {c["time"] for c in stored}
     for c in fetched:
         if c["time"] not in existing_times:
             stored.append(c)
             existing_times.add(c["time"])
-    # Sort oldest first, keep last max_size
     stored.sort(key=lambda c: c["time"])
     return stored[-max_size:]
 
 # ══════════════════════════════════════════════
-#  4. STRATEGY LOGIC
+#  4. ATR CALCULATION
+# ══════════════════════════════════════════════
+def calc_atr(candles, idx, period=ATR_PERIOD):
+    """Calculate ATR14 at a given candle index."""
+    start = max(1, idx - period + 1)
+    trs = []
+    for j in range(start, idx + 1):
+        high  = candles[j]["high"]
+        low   = candles[j]["low"]
+        prev_close = candles[j - 1]["close"]
+        tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
+        trs.append(tr)
+    return float(np.mean(trs)) if trs else 0.0
+
+# ══════════════════════════════════════════════
+#  5. STRATEGY LOGIC
 # ══════════════════════════════════════════════
 def find_swings(closes, lb=SWING_LB):
+    """Detect swing highs/lows using candle closes only (no wicks)."""
     sh, sl = [], []
     for i in range(lb, len(closes) - lb):
         win = closes[i-lb:i+lb+1]
@@ -167,6 +191,10 @@ def find_swings(closes, lb=SWING_LB):
     return sh, sl
 
 def detect_trend(closes, sh, sl, n=TREND_N):
+    """
+    Trend detection using last N swing highs and lows.
+    TREND_N=2: only requires 2 consecutive HH+HL or LH+LL.
+    """
     psh = sh[-n:]
     psl = sl[-n:]
     if len(psh) < 2 or len(psl) < 2:
@@ -189,11 +217,9 @@ def run_signal_check(pair, candles, active_setups):
     pip    = PIP_SIZE[pair]
     rr     = RR_MAP[pair]
     closes = [c["close"] for c in candles]
-    highs  = [c["high"]  for c in candles]
-    lows   = [c["low"]   for c in candles]
+    n      = len(closes)
     cur    = closes[-1]
     tol    = cur * RETEST_TOL
-    n      = len(closes)
 
     sh, sl = find_swings(closes, SWING_LB)
     setup  = active_setups.get(pair)
@@ -206,7 +232,6 @@ def run_signal_check(pair, candles, active_setups):
 
     # ── Check retest entry ──
     if setup:
-        # Must be at least 1 candle after the breakout candle
         candles_since_break = (n - 1) - setup.get("breakout_idx", 0)
         if candles_since_break < 1:
             print(f"  [{pair}] Waiting — breakout candle not yet closed")
@@ -215,11 +240,11 @@ def run_signal_check(pair, candles, active_setups):
         lv = setup["level"]
 
         if setup["dir"] == "long":
-            # Wick can pierce below, but body (close) must be above the level
-            pulled_back = cur <= lv + tol   # price came back to the level
-            body_above  = cur > lv          # close confirms above the level
+            # Close must be near the level and above it (body confirmation)
+            pulled_back = cur <= lv + tol
+            body_above  = cur > lv
             if pulled_back and body_above:
-                sl_p = setup["sl"]
+                sl_p = setup["sl"]   # swing low close - 0.25*ATR buffer
                 risk = cur - sl_p
                 if risk > pip * 3:
                     tp = cur + risk * rr
@@ -233,15 +258,15 @@ def run_signal_check(pair, candles, active_setups):
                         "level":   lv,
                         "sl_pips": round(risk / pip, 1),
                         "rr":      rr,
+                        "trend":   setup.get("trend", "unknown"),
                         "time":    datetime.now(timezone.utc).isoformat(),
                     }
 
         else:  # short
-            # Wick can pierce above, but body (close) must be below the level
-            pulled_back = cur >= lv - tol   # price came back to the level
-            body_below  = cur < lv          # close confirms below the level
+            pulled_back = cur >= lv - tol
+            body_below  = cur < lv
             if pulled_back and body_below:
-                sl_p = setup["sl"]
+                sl_p = setup["sl"]   # swing high close + 0.25*ATR buffer
                 risk = sl_p - cur
                 if risk > pip * 3:
                     tp = cur - risk * rr
@@ -255,6 +280,7 @@ def run_signal_check(pair, candles, active_setups):
                         "level":   lv,
                         "sl_pips": round(risk / pip, 1),
                         "rr":      rr,
+                        "trend":   setup.get("trend", "unknown"),
                         "time":    datetime.now(timezone.utc).isoformat(),
                     }
 
@@ -268,12 +294,17 @@ def run_signal_check(pair, candles, active_setups):
                 if (n - 1) - (last_sh + SWING_LB) <= BREAK_WINDOW and cur > closes[last_sh]:
                     valid_sl = [s for s in sl if s + SWING_LB <= n - 1]
                     if valid_sl:
-                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest candle")
+                        last_sl_idx = valid_sl[-1]
+                        sl_close    = closes[last_sl_idx]
+                        atr         = calc_atr(candles, last_sl_idx)
+                        sl_price    = sl_close - ATR_MULT * atr   # buffer below swing low close
+                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} - {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
                         active_setups[pair] = {
                             "dir":          "long",
                             "level":        closes[last_sh],
-                            "sl":           lows[valid_sl[-1]],
+                            "sl":           sl_price,
                             "breakout_idx": n - 1,
+                            "trend":        trend,
                             "created":      datetime.now(timezone.utc).isoformat(),
                         }
         elif trend == "bearish" and sl:
@@ -283,29 +314,36 @@ def run_signal_check(pair, candles, active_setups):
                 if (n - 1) - (last_sl + SWING_LB) <= BREAK_WINDOW and cur < closes[last_sl]:
                     valid_sh = [s for s in sh if s + SWING_LB <= n - 1]
                     if valid_sh:
-                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest candle")
+                        last_sh_idx = valid_sh[-1]
+                        sl_close    = closes[last_sh_idx]
+                        atr         = calc_atr(candles, last_sh_idx)
+                        sl_price    = sl_close + ATR_MULT * atr   # buffer above swing high close
+                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} + {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
                         active_setups[pair] = {
                             "dir":          "short",
                             "level":        closes[last_sl],
-                            "sl":           highs[valid_sh[-1]],
+                            "sl":           sl_price,
                             "breakout_idx": n - 1,
+                            "trend":        trend,
                             "created":      datetime.now(timezone.utc).isoformat(),
                         }
     return None
 
 # ══════════════════════════════════════════════
-#  5. TELEGRAM ALERT
+#  6. TELEGRAM ALERT
 # ══════════════════════════════════════════════
 def send_telegram(signal):
     if not TG_TOKEN or not TG_CHAT_ID:
         print("  [ALERT] Telegram not configured — skipping")
         return
 
-    pair  = signal["pair"]
-    side  = signal["side"]
-    dp    = DP[pair]
-    arrow = "🟢" if side == "BUY" else "🔴"
-    now   = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    pair   = signal["pair"]
+    side   = signal["side"]
+    dp     = DP[pair]
+    arrow  = "🟢" if side == "BUY" else "🔴"
+    trend  = signal.get("trend", "unknown")
+    t_icon = "↗️" if trend == "bullish" else "↘️" if trend == "bearish" else "➡️"
+    now    = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     msg = (
         f"{arrow} *EDGE SIGNAL — {side} {pair}*\n\n"
@@ -313,6 +351,7 @@ def send_telegram(signal):
         f"🛑 Stop Loss:   `{signal['sl']:.{dp}f}`\n"
         f"🎯 Take Profit: `{signal['tp']:.{dp}f}`\n\n"
         f"📊 RR: 1:{signal['rr']}  |  Risk: {signal['sl_pips']:.1f} pips\n"
+        f"{t_icon} Trend: {trend.capitalize()}\n"
         f"🕐 {now}\n\n"
         f"_Break & Retest setup — M15 | Log it in EDGE Journal_"
     )
@@ -332,21 +371,23 @@ def send_telegram(signal):
         print(f"  [ALERT] ✗ Telegram error: {e}")
 
 # ══════════════════════════════════════════════
-#  6. SIGNAL LOG
+#  7. SIGNAL LOG
 # ══════════════════════════════════════════════
 def log_signal(signal):
     SIGNALS_LOG.parent.mkdir(exist_ok=True)
     header = not SIGNALS_LOG.exists()
     with open(SIGNALS_LOG, "a") as f:
         if header:
-            f.write("time,pair,side,entry,sl,tp,sl_pips,rr,level\n")
+            f.write("time,pair,side,entry,sl,tp,sl_pips,rr,level,trend\n")
         f.write(
             f"{signal['time']},{signal['pair']},{signal['side']},"
             f"{signal['entry']},{signal['sl']},{signal['tp']},"
-            f"{signal['sl_pips']},{signal['rr']},{signal['level']}\n"
+            f"{signal['sl_pips']},{signal['rr']},{signal['level']},"
+            f"{signal.get('trend','')}\n"
         )
+
 # ══════════════════════════════════════════════
-#  7. SHEET LOGGER
+#  8. SHEET LOGGER
 # ══════════════════════════════════════════════
 def log_signal_to_sheet(signal):
     """Write new signal to Google Sheet as PENDING."""
@@ -371,13 +412,14 @@ def log_signal_to_sheet(signal):
             "PENDING",
             "",
             "",
+            signal.get("trend", ""),
         ])
         print(f"  [SHEET] ✓ Signal logged for {signal['pair']}")
     except Exception as e:
         print(f"  [SHEET] ✗ Sheet log error: {e}")
 
 # ══════════════════════════════════════════════
-#  8. DUPLICATE GUARD
+#  9. DUPLICATE GUARD
 # ══════════════════════════════════════════════
 def is_duplicate(signal, fired_signals):
     sig_id = f"{signal['pair']}_{signal['side']}_{round(signal['level'], 4)}"
@@ -399,7 +441,7 @@ def is_duplicate(signal, fired_signals):
     return False
 
 # ══════════════════════════════════════════════
-#  9. MAIN
+#  10. MAIN
 # ══════════════════════════════════════════════
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -448,7 +490,7 @@ def main():
         if signal:
             if not is_duplicate(signal, fired_signals):
                 signals_fired.append(signal)
-                print(f"  [{pair}] 🔔 SIGNAL: {signal['side']}  Entry: {signal['entry']:.{DP[pair]}f}  SL: {signal['sl']:.{DP[pair]}f}  TP: {signal['tp']:.{DP[pair]}f}")
+                print(f"  [{pair}] 🔔 SIGNAL: {signal['side']}  Entry: {signal['entry']:.{DP[pair]}f}  SL: {signal['sl']:.{DP[pair]}f}  TP: {signal['tp']:.{DP[pair]}f}  Trend: {signal.get('trend')}")
             else:
                 print(f"  [{pair}] Signal already fired recently — skipping duplicate")
 
@@ -484,4 +526,4 @@ def main():
     print(f"{'='*55}\n")
 
 if __name__ == "__main__":
-    main() 
+    main()
