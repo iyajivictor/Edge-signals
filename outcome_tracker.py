@@ -19,8 +19,7 @@ import requests
 from datetime import datetime, timezone
 from google.oauth2.service_account import Credentials
 import gspread
-
-# ══════════════════════════════════════════════
+def══════════════════════════════════════════════
 #  CONFIG
 # ══════════════════════════════════════════════
 TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
@@ -49,7 +48,8 @@ DP = {
 #  1. GOOGLE SHEETS CONNECTION
 # ══════════════════════════════════════════════
 def connect_sheet():
-    creds_dict = json.loads(GOOGLE_CREDS)
+    raw = base64.b64decode(GOOGLE_CREDS).decode("utf-8")
+    creds_dict = json.loads(raw)
     creds = Credentials.from_service_account_info(
         creds_dict,
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
