@@ -1,4 +1,5 @@
-sheet1GE Outcome Tracker
+"""
+EDGE Outcome Tracker
 ====================
 Monitors pending trades from Google Sheets and automatically
 detects outcomes (WIN/LOSS) using Twelve Data API.
@@ -13,7 +14,6 @@ Runs every 30 minutes via GitHub Actions cron
 
 import os
 import json
-import base64
 import requests
 from datetime import datetime, timezone
 from google.oauth2.service_account import Credentials
@@ -256,4 +256,4 @@ def main():
     print(f"\n{'='*55}\n")
 
 if __name__ == "__main__":
-    main()
+    sheet1
