@@ -14,6 +14,7 @@ Runs every 30 minutes via GitHub Actions cron
 
 import os
 import json
+import base64
 import requests
 from datetime import datetime, timezone
 from google.oauth2.service_account import Credentials
