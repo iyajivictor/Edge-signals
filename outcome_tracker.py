@@ -49,7 +49,7 @@ DP = {
 #  1. GOOGLE SHEETS CONNECTION
 # ============================================
 def connect_sheet():
-    raw = base64.b64decode(GOOGLE_CREDS).decode("utf-8")
+    raw = base64.b64decode(GOOGLE_CREDS + "==").decode("utf-8")
     creds_dict = json.loads(raw)
     creds = Credentials.from_service_account_info(
         creds_dict,
