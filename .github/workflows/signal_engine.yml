@@ -27,7 +27,9 @@ jobs:
         env:
           TWELVE_DATA_KEY: ${{ secrets.TWELVE_DATA_KEY }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }} 
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python signal_engine.py
 
       - name: Save state to repo
