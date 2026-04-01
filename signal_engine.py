@@ -21,7 +21,6 @@ Changes vs previous version:
 import os
 import json
 import requests
-import numpy as np
 from datetime import datetime, timezone
 from pathlib import Path
 from google.oauth2.service_account import Credentials
@@ -176,7 +175,7 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
         prev_close = candles[j - 1]["close"]
         tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
         trs.append(tr)
-    return float(np.mean(trs)) if trs else 0.0
+    return float(sum(trs) / len(trs)) if trs else 0.0
 
 # ══════════════════════════════════════════════
 #  5. STRATEGY LOGIC
