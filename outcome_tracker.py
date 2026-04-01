@@ -19,9 +19,10 @@ import requests
 from datetime import datetime, timezone
 from google.oauth2.service_account import Credentials
 import gspread
-def══════════════════════════════════════════════
+
+# ============================================
 #  CONFIG
-# ══════════════════════════════════════════════
+# ============================================
 TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
 TG_TOKEN        = os.environ.get("TG_TOKEN", "")
 TG_CHAT_ID      = os.environ.get("TG_CHAT_ID", "")
@@ -44,9 +45,9 @@ DP = {
     "EURUSD": 5,
 }
 
-# ══════════════════════════════════════════════
+# ============================================
 #  1. GOOGLE SHEETS CONNECTION
-# ══════════════════════════════════════════════
+# ============================================
 def connect_sheet():
     raw = base64.b64decode(GOOGLE_CREDS).decode("utf-8")
     creds_dict = json.loads(raw)
@@ -57,9 +58,9 @@ def connect_sheet():
     client = gspread.authorize(creds)
     return client.open_by_key(SHEET_ID).sheet1
 
-# ══════════════════════════════════════════════
+# ============================================
 #  2. FETCH CANDLES
-# ══════════════════════════════════════════════
+# ============================================
 def fetch_candles(pair, interval, since_dt):
     """Fetch candles from Twelve Data since a given datetime."""
     symbol = TD_SYMBOLS.get(pair)
@@ -101,9 +102,9 @@ def fetch_candles(pair, interval, since_dt):
         print(f"  [{pair}] Fetch failed: {e}")
         return []
 
-# ══════════════════════════════════════════════
+# ============================================
 #  3. OUTCOME DETECTION
-# ══════════════════════════════════════════════
+# ============================================
 def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     """
     Scan candles since signal time to detect WIN or LOSS.
@@ -115,10 +116,10 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  Parse error on signal time: {e}")
         return None
 
-    # ── Step 1: Scan M15 candles ──
+    # Step 1: Scan M15 candles
     candles = fetch_candles(pair, "15min", signal_time)
     if not candles:
-        print(f"  [{pair}] No M15 candles yet — still pending")
+        print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
 
     for candle in candles:
@@ -132,10 +133,9 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
             return ("LOSS", sl, candle["time"].isoformat())
 
         if tp_hit and sl_hit:
-            # ── Step 2: Ambiguous — drop to M1 ──
-            print(f"  [{pair}] Ambiguous M15 candle — checking M1...")
+            # Step 2: Ambiguous -- drop to M1
+            print(f"  [{pair}] Ambiguous M15 candle -- checking M1...")
             m1_candles = fetch_candles(pair, "1min", signal_time)
-            # Filter to only M1 candles within this M15 window
             m1_window = [
                 c for c in m1_candles
                 if candle["time"] >= c["time"]
@@ -149,15 +149,15 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
                 if m1_sl_hit and not m1_tp_hit:
                     return ("LOSS", sl, m1["time"].isoformat())
 
-            # ── Step 3: Still ambiguous — conservative loss ──
-            print(f"  [{pair}] M1 still ambiguous — recording as LOSS")
+            # Step 3: Still ambiguous -- conservative loss
+            print(f"  [{pair}] M1 still ambiguous -- recording as LOSS")
             return ("LOSS", sl, candle["time"].isoformat())
 
-    return None  # Still pending — neither level hit yet
+    return None  # Still pending -- neither level hit yet
 
-# ══════════════════════════════════════════════
+# ============================================
 #  4. TELEGRAM RESULT ALERT
-# ══════════════════════════════════════════════
+# ============================================
 def send_result_alert(row, outcome, close_price):
     if not TG_TOKEN or not TG_CHAT_ID:
         return
@@ -168,7 +168,7 @@ def send_result_alert(row, outcome, close_price):
     emoji = "✅" if outcome == "WIN" else "❌"
 
     msg = (
-        f"{emoji} *EDGE RESULT — {side} {pair}*\n\n"
+        f"{emoji} *EDGE RESULT -- {side} {pair}*\n\n"
         f"Outcome:     *{outcome}*\n"
         f"Entry:       `{float(row['entry']):.{dp}f}`\n"
         f"Close:       `{float(close_price):.{dp}f}`\n"
@@ -183,24 +183,24 @@ def send_result_alert(row, outcome, close_price):
             "text":       msg,
             "parse_mode": "Markdown",
         }, timeout=10)
-        print(f"  [{pair}] Result alert sent — {outcome}")
+        print(f"  [{pair}] Result alert sent -- {outcome}")
     except Exception as e:
         print(f"  [{pair}] Alert error: {e}")
 
-# ══════════════════════════════════════════════
+# ============================================
 #  5. MAIN
-# ══════════════════════════════════════════════
+# ============================================
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     print(f"\n{'='*55}")
-    print(f"  EDGE Outcome Tracker — {now}")
+    print(f"  EDGE Outcome Tracker -- {now}")
     print(f"{'='*55}")
 
     if not all([TWELVE_DATA_KEY, SHEET_ID, GOOGLE_CREDS]):
-        print("[ERROR] Missing required environment variables — aborting")
+        print("[ERROR] Missing required environment variables -- aborting")
         return
 
-    # ── Connect to sheet ──
+    # Connect to sheet
     try:
         sheet = connect_sheet()
         print("[OK] Connected to Google Sheet")
@@ -208,7 +208,7 @@ def main():
         print(f"[ERROR] Sheet connection failed: {e}")
         return
 
-    # ── Read all rows ──
+    # Read all rows
     rows = sheet.get_all_records()
     pending = [
         (i + 2, r) for i, r in enumerate(rows)
@@ -218,7 +218,7 @@ def main():
     print(f"\n  Pending trades: {len(pending)}")
 
     if not pending:
-        print("  Nothing to check — all trades resolved")
+        print("  Nothing to check -- all trades resolved")
         return
 
     for row_num, row in pending:
@@ -230,30 +230,30 @@ def main():
             sl    = float(row["sl"])
             tp    = float(row["tp"])
         except Exception as e:
-            print(f"  [Row {row_num}] Parse error: {e} — skipping")
+            print(f"  [Row {row_num}] Parse error: {e} -- skipping")
             continue
 
         signal_time = row.get("signal_time", "").strip()
-        print(f"\n  Checking [{pair}] {side} — signalled at {signal_time}")
+        print(f"\n  Checking [{pair}] {side} -- signalled at {signal_time}")
 
         result = detect_outcome(pair, side, entry, sl, tp, signal_time)
 
         if result:
             outcome, close_price, close_time = result
-            print(f"  [{pair}] → {outcome} at {close_price}")
+            print(f"  [{pair}] -> {outcome} at {close_price}")
 
-            # ── Update sheet row ──
+            # Update sheet row
             try:
-                sheet.update_cell(row_num, 9,  outcome)        # column I — outcome
-                sheet.update_cell(row_num, 10, close_price)    # column J — close_price
-                sheet.update_cell(row_num, 11, close_time)     # column K — close_time
+                sheet.update_cell(row_num, 9,  outcome)
+                sheet.update_cell(row_num, 10, close_price)
+                sheet.update_cell(row_num, 11, close_time)
                 print(f"  [{pair}] Sheet updated ✓")
             except Exception as e:
                 print(f"  [{pair}] Sheet update error: {e}")
 
             send_result_alert(row, outcome, close_price)
         else:
-            print(f"  [{pair}] Still pending — no update")
+            print(f"  [{pair}] Still pending -- no update")
 
     print(f"\n{'='*55}\n")
 
