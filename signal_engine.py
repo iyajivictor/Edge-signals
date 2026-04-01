@@ -20,7 +20,6 @@ Changes vs previous version:
 
 import os
 import json
-import base64
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
@@ -392,7 +391,7 @@ def log_signal(signal):
 def log_signal_to_sheet(signal):
     """Write new signal to Google Sheet as PENDING."""
     try:
-        raw = base64.b64decode(os.environ.get("GOOGLE_CREDENTIALS", "").strip().rstrip("=") + "==").decode("utf-8")
+        raw = os.environ.get("GOOGLE_CREDENTIALS", "")
         creds_dict = json.loads(raw)
         creds = Credentials.from_service_account_info(
             creds_dict,
