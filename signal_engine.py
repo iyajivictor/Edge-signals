@@ -392,7 +392,7 @@ def log_signal(signal):
 def log_signal_to_sheet(signal):
     """Write new signal to Google Sheet as PENDING."""
     try:
-        raw = base64.b64decode(os.environ.get("GOOGLE_CREDENTIALS", "") + "==").decode("utf-8")
+        raw = base64.b64decode(os.environ.get("GOOGLE_CREDENTIALS", "").strip().rstrip("=") + "==").decode("utf-8")
         creds_dict = json.loads(raw)
         creds = Credentials.from_service_account_info(
             creds_dict,
