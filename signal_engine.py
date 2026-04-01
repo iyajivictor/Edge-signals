@@ -20,6 +20,7 @@ Changes vs previous version:
 
 import os
 import json
+import base64
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
@@ -391,13 +392,14 @@ def log_signal(signal):
 def log_signal_to_sheet(signal):
     """Write new signal to Google Sheet as PENDING."""
     try:
-        creds_dict = json.loads(os.environ.get("GOOGLE_CREDENTIALS", "{}"))
+        raw = base64.b64decode(os.environ.get("GOOGLE_CREDENTIALS", "")).decode("utf-8")
+        creds_dict = json.loads(raw)
         creds = Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
-        sheet  = client.open_by_key(os.environ.get("SHEET_ID", "")).sheet1
+        sheet = client.open_by_key(os.environ.get("SHEET_ID", "")).sheet1
 
         sheet.append_row([
             signal["time"],
