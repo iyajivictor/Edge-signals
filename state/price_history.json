@@ -18149,6 +18149,14 @@
       "breakout_idx": 513,
       "trend": "bullish",
       "created": "2026-04-01T16:15:18.661493+00:00"
+    },
+    "GBPUSD": {
+      "dir": "long",
+      "level": 1.33338,
+      "sl": 1.3297171428571428,
+      "breakout_idx": 517,
+      "trend": "bullish",
+      "created": "2026-04-01T17:15:14.766440+00:00"
     }
   },
   "fired_signals": [
