@@ -1,5 +1,4 @@
-"""
-EDGE Outcome Tracker
+sheet1GE Outcome Tracker
 ====================
 Monitors pending trades from Google Sheets and automatically
 detects outcomes (WIN/LOSS) using Twelve Data API.
@@ -49,8 +48,7 @@ DP = {
 #  1. GOOGLE SHEETS CONNECTION
 # ============================================
 def connect_sheet():
-    raw = base64.b64decode(GOOGLE_CREDS.strip().rstrip("=") + "==").decode("utf-8")
-    creds_dict = json.loads(raw)
+    creds_dict = json.loads(GOOGLE_CREDS)
     creds = Credentials.from_service_account_info(
         creds_dict,
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
