@@ -17267,14 +17267,6 @@
     ]
   },
   "active_setups": {
-    "USDJPY": {
-      "dir": "long",
-      "level": 158.8608,
-      "sl": 158.58776607142858,
-      "breakout_idx": 466,
-      "trend": "bullish",
-      "created": "2026-04-01T04:17:47.921935+00:00"
-    }
   },
   "fired_signals": [
     {
