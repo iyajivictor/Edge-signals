@@ -15,12 +15,13 @@ Changes vs previous version:
   - TREND_N reduced 3 → 2 (less strict trend confirmation)
   - SL placement uses swing close + 0.25x ATR14 buffer (not wicks)
   - Swing detection remains close-based (unchanged)
-  - RETEST_WINDOW unchanged at 30 candles
+  - RETEST_WINDOW reduced 30 → 5 candles (75 minutes max retest window)
 """
 
 import os
 import json
 import requests
+import numpy as np
 from datetime import datetime, timezone
 from pathlib import Path
 from google.oauth2.service_account import Credentials
@@ -76,7 +77,7 @@ RR_MAP = {
 }
 SWING_LB       = 5
 RETEST_TOL     = 0.0008
-RETEST_WINDOW  = 30
+RETEST_WINDOW  = 5
 TREND_N        = 2        # changed: 3 → 2
 BREAK_WINDOW   = 20
 CANDLES_NEEDED = 200
@@ -175,7 +176,7 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
         prev_close = candles[j - 1]["close"]
         tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
         trs.append(tr)
-    return float(sum(trs) / len(trs)) if trs else 0.0
+    return float(np.mean(trs)) if trs else 0.0
 
 # ══════════════════════════════════════════════
 #  5. STRATEGY LOGIC
