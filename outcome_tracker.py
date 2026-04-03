@@ -209,7 +209,6 @@ def main():
 
     # Read all rows
     rows = sheet.get_all_records()
-    print(f"  First row sample: {rows[0] if rows else 'empty'}")
     pending = [
         (i + 2, r) for i, r in enumerate(rows)
         if r.get("outcome", "").strip().upper() == "PENDING"
