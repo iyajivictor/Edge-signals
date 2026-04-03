@@ -220,7 +220,7 @@ def main():
 
     # Read all rows
     rows = sheet.get_all_records()
-    for i, r in enumerate(rows):
+  for i, r in enumerate(rows):
     raw = repr(r.get("outcome", ""))
     print(f"  Row {i+2} outcome raw: {raw}")
     pending = [
