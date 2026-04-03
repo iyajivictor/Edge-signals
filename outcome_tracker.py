@@ -83,7 +83,9 @@ def fetch_candles(pair, interval, since_dt):
         candles = []
         for c in reversed(data.get("values", [])):
             try:
-                candle_time = datetime.fromisoformat(c["datetime"]).replace(tzinfo=timezone.utc)
+                candle_time = datetime.fromisoformat(c["datetime"])
+                if candle_time.tzinfo is None:
+                    candle_time = candle_time.replace(tzinfo=timezone.utc)
                 if candle_time <= since_dt:
                     continue
                 candles.append({
@@ -99,7 +101,6 @@ def fetch_candles(pair, interval, since_dt):
     except Exception as e:
         print(f"  [{pair}] Fetch failed: {e}")
         return []
-
 # ============================================
 #  3. OUTCOME DETECTION
 # ============================================
