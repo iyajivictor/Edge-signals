@@ -5,9 +5,9 @@ Monitors pending trades from Google Sheets and automatically
 detects outcomes (WIN/LOSS) using Twelve Data API.
 
 Resolution logic:
-  1. Scan M15 candles since signal time
+  1. Fetch candles from signal time onwards (API-level filtering)
   2. If ambiguous (single candle hits both), drop to M1
-  3. If still ambiguous, record as LOSS (conservative bias)
+  3. If still ambiguous, leave as PENDING
 
 Runs every 30 minutes via GitHub Actions cron
 """
@@ -57,18 +57,29 @@ def connect_sheet():
     return client.open_by_key(SHEET_ID).sheet1
 
 # ============================================
-#  2. FETCH CANDLES
+#  2. FLOOR TO M15
+# ============================================
+def floor_to_m15(dt):
+    """Round datetime down to nearest 15-minute boundary."""
+    minute = (dt.minute // 15) * 15
+    return dt.replace(minute=minute, second=0, microsecond=0)
+
+# ============================================
+#  3. FETCH CANDLES
 # ============================================
 def fetch_candles(pair, interval, since_dt):
-    """Fetch candles from Twelve Data since a given datetime."""
+    """Fetch candles from Twelve Data starting from since_dt."""
     symbol = TD_SYMBOLS.get(pair)
     if not symbol:
         return []
+
+    start_date = since_dt.strftime("%Y-%m-%d %H:%M:%S")
 
     url = (
         f"https://api.twelvedata.com/time_series"
         f"?symbol={symbol}"
         f"&interval={interval}"
+        f"&start_date={start_date}"
         f"&outputsize=500"
         f"&apikey={TWELVE_DATA_KEY}"
     )
@@ -86,8 +97,6 @@ def fetch_candles(pair, interval, since_dt):
                 candle_time = datetime.fromisoformat(c["datetime"])
                 if candle_time.tzinfo is None:
                     candle_time = candle_time.replace(tzinfo=timezone.utc)
-                if candle_time <= since_dt:
-                    continue
                 candles.append({
                     "time":  candle_time,
                     "high":  float(c["high"]),
@@ -101,8 +110,9 @@ def fetch_candles(pair, interval, since_dt):
     except Exception as e:
         print(f"  [{pair}] Fetch failed: {e}")
         return []
+
 # ============================================
-#  3. OUTCOME DETECTION
+#  4. OUTCOME DETECTION
 # ============================================
 def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     """
@@ -110,12 +120,13 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     Returns (outcome, close_price, close_time) or None if still pending.
     """
     try:
-        signal_time = datetime.fromisoformat(signal_time_str).replace(tzinfo=timezone.utc)
+        raw_time    = datetime.fromisoformat(signal_time_str).replace(tzinfo=timezone.utc)
+        signal_time = floor_to_m15(raw_time)
     except Exception as e:
         print(f"  Parse error on signal time: {e}")
         return None
 
-    # Step 1: Scan M15 candles
+    # Step 1: Scan M15 candles from signal time
     candles = fetch_candles(pair, "15min", signal_time)
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
@@ -137,7 +148,7 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
             m1_candles = fetch_candles(pair, "1min", signal_time)
             m1_window = [
                 c for c in m1_candles
-                if candle["time"] >= c["time"]
+                if c["time"] <= candle["time"]
             ]
             for m1 in m1_window:
                 m1_tp_hit = m1["high"] >= tp if side == "BUY" else m1["low"] <= tp
@@ -148,14 +159,14 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
                 if m1_sl_hit and not m1_tp_hit:
                     return ("LOSS", sl, m1["time"].isoformat())
 
-            # Step 3: Still ambiguous -- conservative loss
-            print(f"  [{pair}] M1 still ambiguous -- recording as LOSS")
-            return ("LOSS", sl, candle["time"].isoformat())
+            # Step 3: M1 still ambiguous -- leave as PENDING
+            print(f"  [{pair}] M1 ambiguous -- leaving as PENDING")
+            return None
 
     return None  # Still pending -- neither level hit yet
 
 # ============================================
-#  4. TELEGRAM RESULT ALERT
+#  5. TELEGRAM RESULT ALERT
 # ============================================
 def send_result_alert(row, outcome, close_price):
     if not TG_TOKEN or not TG_CHAT_ID:
@@ -187,7 +198,7 @@ def send_result_alert(row, outcome, close_price):
         print(f"  [{pair}] Alert error: {e}")
 
 # ============================================
-#  5. MAIN
+#  6. MAIN
 # ============================================
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
