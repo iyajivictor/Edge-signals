@@ -61,6 +61,7 @@ def connect_sheet():
 # ============================================
 def fetch_candles(pair, interval, since_dt):
     """Fetch candles from Twelve Data since a given datetime."""
+    print(f"  Sample candle time: {c['datetime']}")
     symbol = TD_SYMBOLS.get(pair)
     if not symbol:
         return []
