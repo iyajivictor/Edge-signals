@@ -12,10 +12,11 @@ Sends Telegram alerts when a signal fires.
 Logs all signals to state/signals_log.csv
 
 Changes vs previous version:
-  - TREND_N reduced 3 → 2 (less strict trend confirmation)
+  - TREND_N reverted 2 → 3 (stricter trend confirmation)
+  - SWING_MIN_DIST added: minimum pip distance between swing points (filters noise swings)
   - SL placement uses swing close + 0.25x ATR14 buffer (not wicks)
   - Swing detection remains close-based (unchanged)
-  - RETEST_WINDOW reduced 30 → 5 candles (75 minutes max retest window)
+  - RETEST_WINDOW = 5 candles (75 minutes max retest window)
 """
 
 import os
@@ -75,9 +76,10 @@ RR_MAP = {
     "XAUUSD": 3.0,
 }
 SWING_LB       = 5
+SWING_MIN_DIST = 5        # minimum pip distance between consecutive swing points
 RETEST_TOL     = 0.0008
 RETEST_WINDOW  = 5
-TREND_N        = 2        # changed: 3 → 2
+TREND_N        = 3        # reverted: 2 → 3 (stricter trend confirmation)
 BREAK_WINDOW   = 20
 CANDLES_NEEDED = 200
 MAX_HISTORY    = 1344     # ~2 weeks of M15 candles
@@ -170,8 +172,8 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
     start = max(1, idx - period + 1)
     trs = []
     for j in range(start, idx + 1):
-        high  = candles[j]["high"]
-        low   = candles[j]["low"]
+        high       = candles[j]["high"]
+        low        = candles[j]["low"]
         prev_close = candles[j - 1]["close"]
         tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
         trs.append(tr)
@@ -180,19 +182,41 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
 # ══════════════════════════════════════════════
 #  5. STRATEGY LOGIC
 # ══════════════════════════════════════════════
-def find_swings(closes, lb=SWING_LB):
-    """Detect swing highs/lows using candle closes only (no wicks)."""
+def find_swings(closes, candles, lb=SWING_LB, pair=None):
+    """
+    Detect swing highs/lows using candle closes only (no wicks).
+    Filters out swings that are less than SWING_MIN_DIST pips apart
+    from the previous swing of the same type — removes noise swings.
+    """
     sh, sl = [], []
+    pip = PIP_SIZE.get(pair, 0.0001) if pair else 0.0001
+    min_dist = SWING_MIN_DIST * pip
+
     for i in range(lb, len(closes) - lb):
         win = closes[i-lb:i+lb+1]
-        if closes[i] == max(win): sh.append(i)
-        if closes[i] == min(win): sl.append(i)
+
+        if closes[i] == max(win):
+            # Must be at least SWING_MIN_DIST pips away from previous swing high
+            if sh:
+                prev_high = closes[sh[-1]]
+                if abs(closes[i] - prev_high) < min_dist:
+                    continue
+            sh.append(i)
+
+        if closes[i] == min(win):
+            # Must be at least SWING_MIN_DIST pips away from previous swing low
+            if sl:
+                prev_low = closes[sl[-1]]
+                if abs(closes[i] - prev_low) < min_dist:
+                    continue
+            sl.append(i)
+
     return sh, sl
 
 def detect_trend(closes, sh, sl, n=TREND_N):
     """
     Trend detection using last N swing highs and lows.
-    TREND_N=2: only requires 2 consecutive HH+HL or LH+LL.
+    TREND_N=3: requires 3 consecutive HH+HL (bull) or LH+LL (bear).
     """
     psh = sh[-n:]
     psl = sl[-n:]
@@ -220,7 +244,7 @@ def run_signal_check(pair, candles, active_setups):
     cur    = closes[-1]
     tol    = cur * RETEST_TOL
 
-    sh, sl = find_swings(closes, SWING_LB)
+    sh, sl = find_swings(closes, candles, SWING_LB, pair=pair)
     setup  = active_setups.get(pair)
 
     # ── Expire stale setup ──
@@ -296,7 +320,7 @@ def run_signal_check(pair, candles, active_setups):
                         last_sl_idx = valid_sl[-1]
                         sl_close    = closes[last_sl_idx]
                         atr         = calc_atr(candles, last_sl_idx)
-                        sl_price    = sl_close - ATR_MULT * atr   # buffer below swing low close
+                        sl_price    = sl_close - ATR_MULT * atr
                         print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} - {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
                         active_setups[pair] = {
                             "dir":          "long",
@@ -316,7 +340,7 @@ def run_signal_check(pair, candles, active_setups):
                         last_sh_idx = valid_sh[-1]
                         sl_close    = closes[last_sh_idx]
                         atr         = calc_atr(candles, last_sh_idx)
-                        sl_price    = sl_close + ATR_MULT * atr   # buffer above swing high close
+                        sl_price    = sl_close + ATR_MULT * atr
                         print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} + {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
                         active_setups[pair] = {
                             "dir":          "short",
