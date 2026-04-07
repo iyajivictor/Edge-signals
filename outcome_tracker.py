@@ -5,9 +5,13 @@ Monitors pending trades from Google Sheets and automatically
 detects outcomes (WIN/LOSS) using Twelve Data API.
 
 Resolution logic:
-  1. Fetch candles from signal time onwards (API-level filtering)
+  1. Fetch candles from NEXT candle after signal (skip signal candle)
   2. If ambiguous (single candle hits both), drop to M1
   3. If still ambiguous, leave as PENDING
+
+Fix applied:
+  - check_from = signal_time + 15min (prevents false LOSS from
+    pre-entry candles being scanned)
 
 Runs every 30 minutes via GitHub Actions cron
 """
@@ -15,7 +19,7 @@ Runs every 30 minutes via GitHub Actions cron
 import os
 import json
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from google.oauth2.service_account import Credentials
 import gspread
 
@@ -117,6 +121,8 @@ def fetch_candles(pair, interval, since_dt):
 def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     """
     Scan candles since signal time to detect WIN or LOSS.
+    Starts from the candle AFTER the signal candle to avoid
+    scanning pre-entry price action as a false outcome.
     Returns (outcome, close_price, close_time) or None if still pending.
     """
     try:
@@ -126,15 +132,18 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  Parse error on signal time: {e}")
         return None
 
-    # Step 1: Scan M15 candles from signal time
-    candles = fetch_candles(pair, "15min", signal_time)
+    # ── KEY FIX: skip signal candle, start from next candle ──
+    check_from = signal_time + timedelta(minutes=15)
+
+    # Step 1: Scan M15 candles from check_from
+    candles = fetch_candles(pair, "15min", check_from)
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
 
     for candle in candles:
-        tp_hit = candle["high"] >= tp if side == "BUY" else candle["low"] <= tp
-        sl_hit = candle["low"] <= sl if side == "BUY" else candle["high"] >= sl
+        tp_hit = candle["high"] >= tp if side == "BUY" else candle["low"]  <= tp
+        sl_hit = candle["low"]  <= sl if side == "BUY" else candle["high"] >= sl
 
         if tp_hit and not sl_hit:
             return ("WIN", tp, candle["time"].isoformat())
@@ -145,14 +154,14 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         if tp_hit and sl_hit:
             # Step 2: Ambiguous -- drop to M1
             print(f"  [{pair}] Ambiguous M15 candle -- checking M1...")
-            m1_candles = fetch_candles(pair, "1min", signal_time)
+            m1_candles = fetch_candles(pair, "1min", check_from)
             m1_window = [
                 c for c in m1_candles
                 if c["time"] <= candle["time"]
             ]
             for m1 in m1_window:
-                m1_tp_hit = m1["high"] >= tp if side == "BUY" else m1["low"] <= tp
-                m1_sl_hit = m1["low"] <= sl if side == "BUY" else m1["high"] >= sl
+                m1_tp_hit = m1["high"] >= tp if side == "BUY" else m1["low"]  <= tp
+                m1_sl_hit = m1["low"]  <= sl if side == "BUY" else m1["high"] >= sl
 
                 if m1_tp_hit and not m1_sl_hit:
                     return ("WIN", tp, m1["time"].isoformat())
@@ -163,7 +172,7 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
             print(f"  [{pair}] M1 ambiguous -- leaving as PENDING")
             return None
 
-    return None  # Still pending -- neither level hit yet
+    return None  # Neither level hit yet -- still pending
 
 # ============================================
 #  5. TELEGRAM RESULT ALERT
