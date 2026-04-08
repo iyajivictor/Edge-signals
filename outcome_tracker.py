@@ -251,7 +251,7 @@ def main():
             entry = float(row["entry"])
             sl    = float(row["sl"])
             tp    = float(row["tp"])
-         print(f"  [{pair}] entry={entry} sl={sl} tp={tp}")
+            print(f"  [{pair}] entry={entry} sl={sl} tp={tp}")
         except Exception as e:
             print(f"  [Row {row_num}] Parse error: {e} -- skipping")
             continue
