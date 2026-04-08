@@ -140,6 +140,9 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
+    if candles:
+        print(f"  [{pair}] First candle: {candles[0]['time']} low={candles[0]['low']}")
+        print(f"  [{pair}] check_from was: {check_from}")
 
     for candle in candles:
         tp_hit = candle["high"] >= tp if side == "BUY" else candle["low"]  <= tp
