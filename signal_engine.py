@@ -13,10 +13,12 @@ Logs all signals to state/signals_log.csv
 
 Changes vs previous version:
   - TREND_N reverted 2 → 3 (stricter trend confirmation)
-  - SWING_MIN_DIST added: minimum pip distance between swing points (filters noise swings)
+  - SWING_MIN_DIST added: minimum pip distance between swing points
   - SL placement uses swing close + 0.25x ATR14 buffer (not wicks)
   - Swing detection remains close-based (unchanged)
   - RETEST_WINDOW = 5 candles (75 minutes max retest window)
+  - FIX: return None after setup expiry (prevents same-run rebuild)
+  - FIX: live_signals lock (prevents cascade re-firing per pair)
 """
 
 import os
@@ -28,22 +30,16 @@ from google.oauth2.service_account import Credentials
 import gspread
 
 # ══════════════════════════════════════════════
-#  CONFIG  — set these as GitHub Secrets
+#  CONFIG
 # ══════════════════════════════════════════════
 TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
 TG_TOKEN        = os.environ.get("TG_TOKEN",        "")
 TG_CHAT_ID      = os.environ.get("TG_CHAT_ID",      "")
 
-# ── Active strategy pairs ──
 STRATEGY_PAIRS = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD"]
-
-# ── Data collection only (no signals) ──
 DATA_ONLY_PAIRS = ["EURUSD"]
-
-# ── All pairs combined ──
 PAIRS = STRATEGY_PAIRS + DATA_ONLY_PAIRS
 
-# ── Twelve Data symbol map ──
 TD_SYMBOLS = {
     "USDJPY": "USD/JPY",
     "GBPUSD": "GBP/USD",
@@ -52,7 +48,6 @@ TD_SYMBOLS = {
     "EURUSD": "EUR/USD",
 }
 
-# ── Pip config ──
 PIP_SIZE = {
     "USDJPY": 0.01,
     "GBPUSD": 0.0001,
@@ -68,7 +63,6 @@ DP = {
     "EURUSD": 5,
 }
 
-# ── Strategy params ──
 RR_MAP = {
     "USDJPY": 2.0,
     "GBPUSD": 2.0,
@@ -76,19 +70,17 @@ RR_MAP = {
     "XAUUSD": 3.0,
 }
 SWING_LB       = 5
-SWING_MIN_DIST = 5        # minimum pip distance between consecutive swing points
+SWING_MIN_DIST = 5
 RETEST_TOL     = 0.0008
 RETEST_WINDOW  = 5
-TREND_N        = 3        # reverted: 2 → 3 (stricter trend confirmation)
+TREND_N        = 3
 BREAK_WINDOW   = 20
 CANDLES_NEEDED = 200
-MAX_HISTORY    = 1344     # ~2 weeks of M15 candles
+MAX_HISTORY    = 1344
 
-# ── ATR-based SL buffer ──
 ATR_PERIOD     = 14
-ATR_MULT       = 0.25     # SL = swing close ± 0.25 × ATR14
+ATR_MULT       = 0.25
 
-# ── State files ──
 STATE_FILE  = Path("state/price_history.json")
 SIGNALS_LOG = Path("state/signals_log.csv")
 
@@ -96,7 +88,6 @@ SIGNALS_LOG = Path("state/signals_log.csv")
 #  1. FETCH M15 OHLC CANDLES
 # ══════════════════════════════════════════════
 def fetch_candles(pair, outputsize=50):
-    """Fetch last N M15 OHLC candles from Twelve Data."""
     symbol = TD_SYMBOLS[pair]
     url = (
         f"https://api.twelvedata.com/time_series"
@@ -108,13 +99,11 @@ def fetch_candles(pair, outputsize=50):
     try:
         res  = requests.get(url, timeout=15)
         data = res.json()
-
         if data.get("status") == "error":
             print(f"  [{pair}] API error: {data.get('message')}")
             return []
-
         candles = []
-        for c in reversed(data.get("values", [])):  # oldest first
+        for c in reversed(data.get("values", [])):
             try:
                 candles.append({
                     "time":  c["datetime"],
@@ -127,7 +116,6 @@ def fetch_candles(pair, outputsize=50):
                 print(f"  [{pair}] Candle parse error: {e}")
                 continue
         return candles
-
     except Exception as e:
         print(f"  [{pair}] Fetch failed: {e}")
         return []
@@ -168,7 +156,6 @@ def merge_candles(stored, fetched, max_size=MAX_HISTORY):
 #  4. ATR CALCULATION
 # ══════════════════════════════════════════════
 def calc_atr(candles, idx, period=ATR_PERIOD):
-    """Calculate ATR14 at a given candle index."""
     start = max(1, idx - period + 1)
     trs = []
     for j in range(start, idx + 1):
@@ -183,11 +170,6 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
 #  5. STRATEGY LOGIC
 # ══════════════════════════════════════════════
 def find_swings(closes, candles, lb=SWING_LB, pair=None):
-    """
-    Detect swing highs/lows using candle closes only (no wicks).
-    Filters out swings that are less than SWING_MIN_DIST pips apart
-    from the previous swing of the same type — removes noise swings.
-    """
     sh, sl = [], []
     pip = PIP_SIZE.get(pair, 0.0001) if pair else 0.0001
     min_dist = SWING_MIN_DIST * pip
@@ -196,7 +178,6 @@ def find_swings(closes, candles, lb=SWING_LB, pair=None):
         win = closes[i-lb:i+lb+1]
 
         if closes[i] == max(win):
-            # Must be at least SWING_MIN_DIST pips away from previous swing high
             if sh:
                 prev_high = closes[sh[-1]]
                 if abs(closes[i] - prev_high) < min_dist:
@@ -204,7 +185,6 @@ def find_swings(closes, candles, lb=SWING_LB, pair=None):
             sh.append(i)
 
         if closes[i] == min(win):
-            # Must be at least SWING_MIN_DIST pips away from previous swing low
             if sl:
                 prev_low = closes[sl[-1]]
                 if abs(closes[i] - prev_low) < min_dist:
@@ -214,10 +194,6 @@ def find_swings(closes, candles, lb=SWING_LB, pair=None):
     return sh, sl
 
 def detect_trend(closes, sh, sl, n=TREND_N):
-    """
-    Trend detection using last N swing highs and lows.
-    TREND_N=3: requires 3 consecutive HH+HL (bull) or LH+LL (bear).
-    """
     psh = sh[-n:]
     psl = sl[-n:]
     if len(psh) < 2 or len(psl) < 2:
@@ -237,6 +213,13 @@ def run_signal_check(pair, candles, active_setups):
         print(f"  [{pair}] Only {len(candles)} candles — need {CANDLES_NEEDED} minimum")
         return None
 
+    # ── Block if live signal already active for this pair ──
+    live_signals = active_setups.get("_live_signals", {})
+    if pair in live_signals:
+        fired_at = live_signals[pair].get("time", "unknown")
+        print(f"  [{pair}] Live signal active since {fired_at} — skipping")
+        return None
+
     pip    = PIP_SIZE[pair]
     rr     = RR_MAP[pair]
     closes = [c["close"] for c in candles]
@@ -251,7 +234,7 @@ def run_signal_check(pair, candles, active_setups):
     if setup and n - setup.get("breakout_idx", 0) > RETEST_WINDOW:
         print(f"  [{pair}] Setup expired — resetting")
         active_setups.pop(pair, None)
-        setup = None
+        return None  # prevent same-run rebuild
 
     # ── Check retest entry ──
     if setup:
@@ -263,15 +246,24 @@ def run_signal_check(pair, candles, active_setups):
         lv = setup["level"]
 
         if setup["dir"] == "long":
-            # Close must be near the level and above it (body confirmation)
             pulled_back = cur <= lv + tol
             body_above  = cur > lv
             if pulled_back and body_above:
-                sl_p = setup["sl"]   # swing low close - 0.25*ATR buffer
+                sl_p = setup["sl"]
                 risk = cur - sl_p
                 if risk > pip * 3:
                     tp = cur + risk * rr
                     active_setups.pop(pair, None)
+                    # ── Lock pair until outcome resolves ──
+                    if "_live_signals" not in active_setups:
+                        active_setups["_live_signals"] = {}
+                    active_setups["_live_signals"][pair] = {
+                        "side":  "BUY",
+                        "entry": cur,
+                        "sl":    sl_p,
+                        "tp":    tp,
+                        "time":  datetime.now(timezone.utc).isoformat(),
+                    }
                     return {
                         "pair":    pair,
                         "side":    "BUY",
@@ -289,11 +281,21 @@ def run_signal_check(pair, candles, active_setups):
             pulled_back = cur >= lv - tol
             body_below  = cur < lv
             if pulled_back and body_below:
-                sl_p = setup["sl"]   # swing high close + 0.25*ATR buffer
+                sl_p = setup["sl"]
                 risk = sl_p - cur
                 if risk > pip * 3:
                     tp = cur - risk * rr
                     active_setups.pop(pair, None)
+                    # ── Lock pair until outcome resolves ──
+                    if "_live_signals" not in active_setups:
+                        active_setups["_live_signals"] = {}
+                    active_setups["_live_signals"][pair] = {
+                        "side":  "SELL",
+                        "entry": cur,
+                        "sl":    sl_p,
+                        "tp":    tp,
+                        "time":  datetime.now(timezone.utc).isoformat(),
+                    }
                     return {
                         "pair":    pair,
                         "side":    "SELL",
@@ -321,7 +323,7 @@ def run_signal_check(pair, candles, active_setups):
                         sl_close    = closes[last_sl_idx]
                         atr         = calc_atr(candles, last_sl_idx)
                         sl_price    = sl_close - ATR_MULT * atr
-                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} - {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
+                        print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f}")
                         active_setups[pair] = {
                             "dir":          "long",
                             "level":        closes[last_sh],
@@ -341,7 +343,7 @@ def run_signal_check(pair, candles, active_setups):
                         sl_close    = closes[last_sh_idx]
                         atr         = calc_atr(candles, last_sh_idx)
                         sl_price    = sl_close + ATR_MULT * atr
-                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f} (close {sl_close:.{DP[pair]}f} + {ATR_MULT}×ATR {atr:.{DP[pair]}f})")
+                        print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f}")
                         active_setups[pair] = {
                             "dir":          "short",
                             "level":        closes[last_sl],
@@ -413,7 +415,6 @@ def log_signal(signal):
 #  8. SHEET LOGGER
 # ══════════════════════════════════════════════
 def log_signal_to_sheet(signal):
-    """Write new signal to Google Sheet as PENDING."""
     try:
         raw = os.environ.get("GOOGLE_CREDENTIALS", "")
         creds_dict = json.loads(raw)
@@ -482,7 +483,6 @@ def main():
     active_setups   = state["active_setups"]
     fired_signals   = state["fired_signals"]
 
-    # ── Fetch & merge candles for all pairs ──
     print("\n[1/3] Fetching M15 candles...")
     for pair in PAIRS:
         candles = fetch_candles(pair, outputsize=50)
@@ -495,7 +495,6 @@ def main():
         latest = candle_history[pair][-1]
         print(f"  {pair}: {len(candle_history[pair])} candles stored | Latest close: {latest['close']:.{DP[pair]}f}")
 
-    # ── Run signal scan on strategy pairs only ──
     print("\n[2/3] Running signal scan...")
     signals_fired = []
 
@@ -506,8 +505,11 @@ def main():
 
         hist_len  = len(candle_history[pair])
         setup     = active_setups.get(pair)
+        live      = active_setups.get("_live_signals", {})
+        live_str  = f"(LIVE {live[pair]['side']} active)" if pair in live else ""
         setup_str = f"({setup['dir']} setup active)" if setup else "(no setup)"
-        print(f"  [{pair}] {hist_len} candles  {setup_str}")
+        status    = live_str if live_str else setup_str
+        print(f"  [{pair}] {hist_len} candles  {status}")
 
         signal = run_signal_check(pair, candle_history[pair], active_setups)
 
@@ -522,7 +524,6 @@ def main():
         stored = len(candle_history.get(pair, []))
         print(f"  [{pair}] Data collection only — {stored} candles stored")
 
-    # ── Send alerts & log ──
     print(f"\n[3/3] Sending alerts...")
     if signals_fired:
         for sig in signals_fired:
@@ -533,17 +534,16 @@ def main():
     else:
         print("  No new signals this run")
 
-    # ── Save state ──
     state["candle_history"] = candle_history
     state["active_setups"]  = active_setups
     state["fired_signals"]  = fired_signals
     save_state(state)
 
-    # ── Summary ──
     print(f"\n{'='*55}")
     print(f"  Strategy pairs:    {STRATEGY_PAIRS}")
     print(f"  Data-only pairs:   {DATA_ONLY_PAIRS}")
-    print(f"  Active setups:     {len(active_setups)}")
+    print(f"  Active setups:     {len([k for k in active_setups if not k.startswith('_')])}")
+    print(f"  Live signals:      {list(active_setups.get('_live_signals', {}).keys())}")
     print(f"  Signals this run:  {len(signals_fired)}")
     total = sum(len(v) for v in candle_history.values())
     print(f"  Total candles:     {total}")
