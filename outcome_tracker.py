@@ -145,6 +145,12 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  [{pair}] check_from was: {check_from}")
 
     for candle in candles:
+        # For BUY: skip candles where price never reached entry
+        if side == "BUY" and candle["high"] < entry:
+           continue
+        # For SELL: skip candles where price never reached entry  
+        if side == "SELL" and candle["low"] > entry:
+           continue
         tp_hit = candle["high"] >= tp if side == "BUY" else candle["low"]  <= tp
         sl_hit = candle["low"]  <= sl if side == "BUY" else candle["high"] >= sl
 
