@@ -270,6 +270,20 @@ def main():
                 sheet.update_cell(row_num, 10, close_price)
                 sheet.update_cell(row_num, 11, close_time)
                 print(f"  [{pair}] Sheet updated ✓")
+              # ── Clear live signal from engine state ──
+                try:
+                    from pathlib import Path
+                    state_file = Path("state/price_history.json")
+                    if state_file.exists():
+                        engine_state = json.loads(state_file.read_text())
+                        live = engine_state.get("active_setups", {}).get("_live_signals", {})
+                        if pair in live:
+                            live.pop(pair)
+                            engine_state["active_setups"]["_live_signals"] = live
+                            state_file.write_text(json.dumps(engine_state, indent=2))
+                            print(f"  [{pair}] Live signal cleared from state ✓")
+                except Exception as e:
+                    print(f"  [{pair}] State clear error: {e}")
             except Exception as e:
                 print(f"  [{pair}] Sheet update error: {e}")
 
