@@ -6,12 +6,15 @@ detects outcomes (WIN/LOSS) using Twelve Data API.
 
 Resolution logic:
   1. Fetch candles from NEXT candle after signal (skip signal candle)
-  2. If ambiguous (single candle hits both), drop to M1
-  3. If still ambiguous, leave as PENDING
+  2. Wait for entry confirmation (close must cross entry price)
+  3. Once confirmed, detect WIN/LOSS using CLOSE prices only
+  4. If still pending, leave as PENDING
 
 Fix applied:
   - check_from = signal_time + 15min (prevents false LOSS from
     pre-entry candles being scanned)
+  - Close-based detection only (eliminates wick false positives)
+  - Entry confirmation required before outcome detection
 
 Runs every 30 minutes via GitHub Actions cron
 """
@@ -20,6 +23,7 @@ import os
 import json
 import requests
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from google.oauth2.service_account import Credentials
 import gspread
 
@@ -105,6 +109,7 @@ def fetch_candles(pair, interval, since_dt):
                     "time":  candle_time,
                     "high":  float(c["high"]),
                     "low":   float(c["low"]),
+                    "close": float(c["close"]),
                 })
             except Exception as e:
                 print(f"  [{pair}] Candle parse error: {e}")
@@ -120,9 +125,10 @@ def fetch_candles(pair, interval, since_dt):
 # ============================================
 def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     """
-    Scan candles since signal time to detect WIN or LOSS.
-    Starts from the candle AFTER the signal candle to avoid
-    scanning pre-entry price action as a false outcome.
+    Detects WIN/LOSS using candle CLOSE prices only.
+    - WIN: candle closes beyond TP
+    - LOSS: candle closes beyond SL
+    - Skips candles until entry is confirmed (close past entry)
     Returns (outcome, close_price, close_time) or None if still pending.
     """
     try:
@@ -132,56 +138,48 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  Parse error on signal time: {e}")
         return None
 
-    # ── KEY FIX: skip signal candle, start from next candle ──
     check_from = signal_time + timedelta(minutes=15)
-
-    # Step 1: Scan M15 candles from check_from
     candles = fetch_candles(pair, "15min", check_from)
+
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
+
     if candles:
-        print(f"  [{pair}] First candle: {candles[0]['time']} low={candles[0]['low']}")
+        print(f"  [{pair}] First candle: {candles[0]['time']} close={candles[0].get('close', 'N/A')}")
         print(f"  [{pair}] check_from was: {check_from}")
 
+    entry_confirmed = False
+
     for candle in candles:
-        # For BUY: skip candles where price never reached entry
-        if side == "BUY" and candle["high"] < entry:
-           continue
-        # For SELL: skip candles where price never reached entry  
-        if side == "SELL" and candle["low"] > entry:
-           continue
-        tp_hit = candle["high"] >= tp if side == "BUY" else candle["low"]  <= tp
-        sl_hit = candle["low"]  <= sl if side == "BUY" else candle["high"] >= sl
+        close = candle.get("close")
+        if close is None:
+            continue
 
-        if tp_hit and not sl_hit:
-            return ("WIN", tp, candle["time"].isoformat())
+        close = float(close)
 
-        if sl_hit and not tp_hit:
-            return ("LOSS", sl, candle["time"].isoformat())
+        # Wait for entry confirmation
+        if not entry_confirmed:
+            if side == "BUY" and close >= entry:
+                entry_confirmed = True
+            elif side == "SELL" and close <= entry:
+                entry_confirmed = True
+            else:
+                continue
 
-        if tp_hit and sl_hit:
-            # Step 2: Ambiguous -- drop to M1
-            print(f"  [{pair}] Ambiguous M15 candle -- checking M1...")
-            m1_candles = fetch_candles(pair, "1min", check_from)
-            m1_window = [
-                c for c in m1_candles
-                if c["time"] <= candle["time"]
-            ]
-            for m1 in m1_window:
-                m1_tp_hit = m1["high"] >= tp if side == "BUY" else m1["low"]  <= tp
-                m1_sl_hit = m1["low"]  <= sl if side == "BUY" else m1["high"] >= sl
+        # Once entry confirmed, check TP and SL on close
+        if side == "BUY":
+            if close >= tp:
+                return ("WIN", tp, candle["time"].isoformat())
+            if close <= sl:
+                return ("LOSS", sl, candle["time"].isoformat())
+        else:  # SELL
+            if close <= tp:
+                return ("WIN", tp, candle["time"].isoformat())
+            if close >= sl:
+                return ("LOSS", sl, candle["time"].isoformat())
 
-                if m1_tp_hit and not m1_sl_hit:
-                    return ("WIN", tp, m1["time"].isoformat())
-                if m1_sl_hit and not m1_tp_hit:
-                    return ("LOSS", sl, m1["time"].isoformat())
-
-            # Step 3: M1 still ambiguous -- leave as PENDING
-            print(f"  [{pair}] M1 ambiguous -- leaving as PENDING")
-            return None
-
-    return None  # Neither level hit yet -- still pending
+    return None  # Still pending
 
 # ============================================
 #  5. TELEGRAM RESULT ALERT
@@ -241,6 +239,7 @@ def main():
     for i, r in enumerate(rows):
         raw = repr(r.get("outcome", ""))
         print(f"  Row {i+2} outcome raw: {raw}")
+
     pending = [
         (i + 2, r) for i, r in enumerate(rows)
         if r.get("outcome", "").strip().upper() == "PENDING"
@@ -274,15 +273,14 @@ def main():
             outcome, close_price, close_time = result
             print(f"  [{pair}] -> {outcome} at {close_price}")
 
-            # Update sheet row
             try:
                 sheet.update_cell(row_num, 9,  outcome)
                 sheet.update_cell(row_num, 10, close_price)
                 sheet.update_cell(row_num, 11, close_time)
                 print(f"  [{pair}] Sheet updated ✓")
-              # ── Clear live signal from engine state ──
+
+                # ── Clear live signal from engine state ──
                 try:
-                    from pathlib import Path
                     state_file = Path("state/price_history.json")
                     if state_file.exists():
                         engine_state = json.loads(state_file.read_text())
@@ -294,6 +292,7 @@ def main():
                             print(f"  [{pair}] Live signal cleared from state ✓")
                 except Exception as e:
                     print(f"  [{pair}] State clear error: {e}")
+
             except Exception as e:
                 print(f"  [{pair}] Sheet update error: {e}")
 
