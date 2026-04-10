@@ -10,11 +10,11 @@ Resolution logic:
   3. Once confirmed, detect WIN/LOSS using CLOSE prices only
   4. If still pending, leave as PENDING
 
-Fix applied:
-  - check_from = signal_time + 15min (prevents false LOSS from
-    pre-entry candles being scanned)
-  - Close-based detection only (eliminates wick false positives)
-  - Entry confirmation required before outcome detection
+Fixes applied:
+  - check_from = signal_time + 15min
+  - Close-based detection only
+  - Entry confirmation required
+  - Live signals cleared from separate live_signals.json (no race condition)
 
 Runs every 30 minutes via GitHub Actions cron
 """
@@ -30,11 +30,13 @@ import gspread
 # ============================================
 #  CONFIG
 # ============================================
-TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
-TG_TOKEN        = os.environ.get("TG_TOKEN", "")
-TG_CHAT_ID      = os.environ.get("TG_CHAT_ID", "")
-SHEET_ID        = os.environ.get("SHEET_ID", "")
-GOOGLE_CREDS    = os.environ.get("GOOGLE_CREDENTIALS", "")
+TWELVE_DATA_KEY  = os.environ.get("TWELVE_DATA_KEY", "")
+TG_TOKEN         = os.environ.get("TG_TOKEN", "")
+TG_CHAT_ID       = os.environ.get("TG_CHAT_ID", "")
+SHEET_ID         = os.environ.get("SHEET_ID", "")
+GOOGLE_CREDS     = os.environ.get("GOOGLE_CREDENTIALS", "")
+
+LIVE_SIGNALS_FILE = Path("state/live_signals.json")
 
 TD_SYMBOLS = {
     "USDJPY": "USD/JPY",
@@ -68,21 +70,41 @@ def connect_sheet():
 #  2. FLOOR TO M15
 # ============================================
 def floor_to_m15(dt):
-    """Round datetime down to nearest 15-minute boundary."""
     minute = (dt.minute // 15) * 15
     return dt.replace(minute=minute, second=0, microsecond=0)
 
 # ============================================
-#  3. FETCH CANDLES
+#  3. LIVE SIGNALS MANAGEMENT
+# ============================================
+def load_live_signals():
+    if LIVE_SIGNALS_FILE.exists():
+        try:
+            return json.loads(LIVE_SIGNALS_FILE.read_text())
+        except:
+            return {}
+    return {}
+
+def clear_live_signal(pair):
+    try:
+        live = load_live_signals()
+        if pair in live:
+            live.pop(pair)
+            LIVE_SIGNALS_FILE.write_text(json.dumps(live, indent=2))
+            print(f"  [{pair}] Live signal cleared ✓")
+        else:
+            print(f"  [{pair}] No live signal found to clear")
+    except Exception as e:
+        print(f"  [{pair}] Live signal clear error: {e}")
+
+# ============================================
+#  4. FETCH CANDLES
 # ============================================
 def fetch_candles(pair, interval, since_dt):
-    """Fetch candles from Twelve Data starting from since_dt."""
     symbol = TD_SYMBOLS.get(pair)
     if not symbol:
         return []
 
     start_date = since_dt.strftime("%Y-%m-%d %H:%M:%S")
-
     url = (
         f"https://api.twelvedata.com/time_series"
         f"?symbol={symbol}"
@@ -94,11 +116,9 @@ def fetch_candles(pair, interval, since_dt):
     try:
         res  = requests.get(url, timeout=15)
         data = res.json()
-
         if data.get("status") == "error":
             print(f"  [{pair}] API error: {data.get('message')}")
             return []
-
         candles = []
         for c in reversed(data.get("values", [])):
             try:
@@ -115,22 +135,14 @@ def fetch_candles(pair, interval, since_dt):
                 print(f"  [{pair}] Candle parse error: {e}")
                 continue
         return candles
-
     except Exception as e:
         print(f"  [{pair}] Fetch failed: {e}")
         return []
 
 # ============================================
-#  4. OUTCOME DETECTION
+#  5. OUTCOME DETECTION
 # ============================================
 def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
-    """
-    Detects WIN/LOSS using candle CLOSE prices only.
-    - WIN: candle closes beyond TP
-    - LOSS: candle closes beyond SL
-    - Skips candles until entry is confirmed (close past entry)
-    Returns (outcome, close_price, close_time) or None if still pending.
-    """
     try:
         raw_time    = datetime.fromisoformat(signal_time_str).replace(tzinfo=timezone.utc)
         signal_time = floor_to_m15(raw_time)
@@ -145,9 +157,8 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
 
-    if candles:
-        print(f"  [{pair}] First candle: {candles[0]['time']} close={candles[0].get('close', 'N/A')}")
-        print(f"  [{pair}] check_from was: {check_from}")
+    print(f"  [{pair}] First candle: {candles[0]['time']} close={candles[0].get('close', 'N/A')}")
+    print(f"  [{pair}] check_from was: {check_from}")
 
     entry_confirmed = False
 
@@ -155,10 +166,8 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         close = candle.get("close")
         if close is None:
             continue
-
         close = float(close)
 
-        # Wait for entry confirmation
         if not entry_confirmed:
             if side == "BUY" and close >= entry:
                 entry_confirmed = True
@@ -167,22 +176,21 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
             else:
                 continue
 
-        # Once entry confirmed, check TP and SL on close
         if side == "BUY":
             if close >= tp:
                 return ("WIN", tp, candle["time"].isoformat())
             if close <= sl:
                 return ("LOSS", sl, candle["time"].isoformat())
-        else:  # SELL
+        else:
             if close <= tp:
                 return ("WIN", tp, candle["time"].isoformat())
             if close >= sl:
                 return ("LOSS", sl, candle["time"].isoformat())
 
-    return None  # Still pending
+    return None
 
 # ============================================
-#  5. TELEGRAM RESULT ALERT
+#  6. TELEGRAM RESULT ALERT
 # ============================================
 def send_result_alert(row, outcome, close_price):
     if not TG_TOKEN or not TG_CHAT_ID:
@@ -214,7 +222,7 @@ def send_result_alert(row, outcome, close_price):
         print(f"  [{pair}] Alert error: {e}")
 
 # ============================================
-#  6. MAIN
+#  7. MAIN
 # ============================================
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -226,7 +234,6 @@ def main():
         print("[ERROR] Missing required environment variables -- aborting")
         return
 
-    # Connect to sheet
     try:
         sheet = connect_sheet()
         print("[OK] Connected to Google Sheet")
@@ -234,7 +241,6 @@ def main():
         print(f"[ERROR] Sheet connection failed: {e}")
         return
 
-    # Read all rows
     rows = sheet.get_all_records()
     for i, r in enumerate(rows):
         raw = repr(r.get("outcome", ""))
@@ -278,21 +284,7 @@ def main():
                 sheet.update_cell(row_num, 10, close_price)
                 sheet.update_cell(row_num, 11, close_time)
                 print(f"  [{pair}] Sheet updated ✓")
-
-                # ── Clear live signal from engine state ──
-                try:
-                    state_file = Path("state/price_history.json")
-                    if state_file.exists():
-                        engine_state = json.loads(state_file.read_text())
-                        live = engine_state.get("active_setups", {}).get("_live_signals", {})
-                        if pair in live:
-                            live.pop(pair)
-                            engine_state["active_setups"]["_live_signals"] = live
-                            state_file.write_text(json.dumps(engine_state, indent=2))
-                            print(f"  [{pair}] Live signal cleared from state ✓")
-                except Exception as e:
-                    print(f"  [{pair}] State clear error: {e}")
-
+                clear_live_signal(pair)
             except Exception as e:
                 print(f"  [{pair}] Sheet update error: {e}")
 
