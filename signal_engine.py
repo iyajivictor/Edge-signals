@@ -18,7 +18,7 @@ Changes vs previous version:
   - Swing detection remains close-based (unchanged)
   - RETEST_WINDOW = 5 candles (75 minutes max retest window)
   - FIX: return None after setup expiry (prevents same-run rebuild)
-  - FIX: live_signals lock (prevents cascade re-firing per pair)
+  - FIX: live_signals now in separate file (no race condition)
 """
 
 import os
@@ -36,9 +36,9 @@ TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
 TG_TOKEN        = os.environ.get("TG_TOKEN",        "")
 TG_CHAT_ID      = os.environ.get("TG_CHAT_ID",      "")
 
-STRATEGY_PAIRS = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD"]
+STRATEGY_PAIRS  = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD"]
 DATA_ONLY_PAIRS = ["EURUSD"]
-PAIRS = STRATEGY_PAIRS + DATA_ONLY_PAIRS
+PAIRS           = STRATEGY_PAIRS + DATA_ONLY_PAIRS
 
 TD_SYMBOLS = {
     "USDJPY": "USD/JPY",
@@ -69,6 +69,7 @@ RR_MAP = {
     "AUDJPY": 2.0,
     "XAUUSD": 3.0,
 }
+
 SWING_LB       = 5
 SWING_MIN_DIST = 5
 RETEST_TOL     = 0.0008
@@ -81,8 +82,9 @@ MAX_HISTORY    = 1344
 ATR_PERIOD     = 14
 ATR_MULT       = 0.25
 
-STATE_FILE  = Path("state/price_history.json")
-SIGNALS_LOG = Path("state/signals_log.csv")
+STATE_FILE       = Path("state/price_history.json")
+LIVE_SIGNALS_FILE = Path("state/live_signals.json")
+SIGNALS_LOG      = Path("state/signals_log.csv")
 
 # ══════════════════════════════════════════════
 #  1. FETCH M15 OHLC CANDLES
@@ -139,6 +141,18 @@ def load_state():
 def save_state(state):
     STATE_FILE.parent.mkdir(exist_ok=True)
     STATE_FILE.write_text(json.dumps(state, indent=2))
+
+def load_live_signals():
+    if LIVE_SIGNALS_FILE.exists():
+        try:
+            return json.loads(LIVE_SIGNALS_FILE.read_text())
+        except:
+            return {}
+    return {}
+
+def save_live_signals(live):
+    LIVE_SIGNALS_FILE.parent.mkdir(exist_ok=True)
+    LIVE_SIGNALS_FILE.write_text(json.dumps(live, indent=2))
 
 # ══════════════════════════════════════════════
 #  3. MERGE CANDLES
@@ -214,7 +228,7 @@ def run_signal_check(pair, candles, active_setups):
         return None
 
     # ── Block if live signal already active for this pair ──
-    live_signals = active_setups.get("_live_signals", {})
+    live_signals = load_live_signals()
     if pair in live_signals:
         fired_at = live_signals[pair].get("time", "unknown")
         print(f"  [{pair}] Live signal active since {fired_at} — skipping")
@@ -234,7 +248,7 @@ def run_signal_check(pair, candles, active_setups):
     if setup and n - setup.get("breakout_idx", 0) > RETEST_WINDOW:
         print(f"  [{pair}] Setup expired — resetting")
         active_setups.pop(pair, None)
-        return None  # prevent same-run rebuild
+        return None
 
     # ── Check retest entry ──
     if setup:
@@ -254,16 +268,15 @@ def run_signal_check(pair, candles, active_setups):
                 if risk > pip * 3:
                     tp = cur + risk * rr
                     active_setups.pop(pair, None)
-                    # ── Lock pair until outcome resolves ──
-                    if "_live_signals" not in active_setups:
-                        active_setups["_live_signals"] = {}
-                    active_setups["_live_signals"][pair] = {
+                    live = load_live_signals()
+                    live[pair] = {
                         "side":  "BUY",
                         "entry": cur,
                         "sl":    sl_p,
                         "tp":    tp,
                         "time":  datetime.now(timezone.utc).isoformat(),
                     }
+                    save_live_signals(live)
                     return {
                         "pair":    pair,
                         "side":    "BUY",
@@ -277,7 +290,7 @@ def run_signal_check(pair, candles, active_setups):
                         "time":    datetime.now(timezone.utc).isoformat(),
                     }
 
-        else:  # short
+        else:
             pulled_back = cur >= lv - tol
             body_below  = cur < lv
             if pulled_back and body_below:
@@ -286,16 +299,15 @@ def run_signal_check(pair, candles, active_setups):
                 if risk > pip * 3:
                     tp = cur - risk * rr
                     active_setups.pop(pair, None)
-                    # ── Lock pair until outcome resolves ──
-                    if "_live_signals" not in active_setups:
-                        active_setups["_live_signals"] = {}
-                    active_setups["_live_signals"][pair] = {
+                    live = load_live_signals()
+                    live[pair] = {
                         "side":  "SELL",
                         "entry": cur,
                         "sl":    sl_p,
                         "tp":    tp,
                         "time":  datetime.now(timezone.utc).isoformat(),
                     }
+                    save_live_signals(live)
                     return {
                         "pair":    pair,
                         "side":    "SELL",
@@ -424,7 +436,6 @@ def log_signal_to_sheet(signal):
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(os.environ.get("SHEET_ID", "")).sheet1
-
         sheet.append_row([
             signal["time"],
             signal["pair"],
@@ -478,10 +489,10 @@ def main():
         print("[ERROR] TWELVE_DATA_KEY not set — aborting")
         return
 
-    state           = load_state()
-    candle_history  = state["candle_history"]
-    active_setups   = state["active_setups"]
-    fired_signals   = state["fired_signals"]
+    state          = load_state()
+    candle_history = state["candle_history"]
+    active_setups  = state["active_setups"]
+    fired_signals  = state["fired_signals"]
 
     print("\n[1/3] Fetching M15 candles...")
     for pair in PAIRS:
@@ -497,6 +508,7 @@ def main():
 
     print("\n[2/3] Running signal scan...")
     signals_fired = []
+    live = load_live_signals()
 
     for pair in STRATEGY_PAIRS:
         if pair not in candle_history or not candle_history[pair]:
@@ -505,7 +517,6 @@ def main():
 
         hist_len  = len(candle_history[pair])
         setup     = active_setups.get(pair)
-        live      = active_setups.get("_live_signals", {})
         live_str  = f"(LIVE {live[pair]['side']} active)" if pair in live else ""
         setup_str = f"({setup['dir']} setup active)" if setup else "(no setup)"
         status    = live_str if live_str else setup_str
@@ -543,7 +554,7 @@ def main():
     print(f"  Strategy pairs:    {STRATEGY_PAIRS}")
     print(f"  Data-only pairs:   {DATA_ONLY_PAIRS}")
     print(f"  Active setups:     {len([k for k in active_setups if not k.startswith('_')])}")
-    print(f"  Live signals:      {list(active_setups.get('_live_signals', {}).keys())}")
+    print(f"  Live signals:      {list(load_live_signals().keys())}")
     print(f"  Signals this run:  {len(signals_fired)}")
     total = sum(len(v) for v in candle_history.values())
     print(f"  Total candles:     {total}")
@@ -551,3 +562,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+  
