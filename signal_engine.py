@@ -2,8 +2,7 @@
 EDGE Signal Engine
 ==================
 Break & Retest signal detector for:
-  USDJPY (primary), GBPUSD, AUDJPY  — active B&R strategy
-  XAUUSD, EURUSD                    — data collection only
+  USDJPY (primary), GBPUSD, AUDJPY, XAUUSD, EURUSD — active B&R strategy
 
   M15 timeframe | 1:2 RR (XAUUSD 1:3) | Trend-filtered
 
@@ -19,6 +18,8 @@ Changes vs previous version:
   - RETEST_WINDOW = 5 candles (75 minutes max retest window)
   - FIX: return None after setup expiry (prevents same-run rebuild)
   - FIX: live_signals now in separate file (no race condition)
+  - FIX: Hybrid retest detection (wick touch + close confirmation)
+  - EURUSD moved to active strategy pairs
 """
 
 import os
@@ -36,9 +37,9 @@ TWELVE_DATA_KEY = os.environ.get("TWELVE_DATA_KEY", "")
 TG_TOKEN        = os.environ.get("TG_TOKEN",        "")
 TG_CHAT_ID      = os.environ.get("TG_CHAT_ID",      "")
 
-STRATEGY_PAIRS  = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD"]
-DATA_ONLY_PAIRS = ["EURUSD"]
-PAIRS           = STRATEGY_PAIRS + DATA_ONLY_PAIRS
+STRATEGY_PAIRS  = ["USDJPY", "GBPUSD", "AUDJPY", "XAUUSD", "EURUSD"]
+DATA_ONLY_PAIRS = []
+PAIRS           = STRATEGY_PAIRS
 
 TD_SYMBOLS = {
     "USDJPY": "USD/JPY",
@@ -68,6 +69,7 @@ RR_MAP = {
     "GBPUSD": 2.0,
     "AUDJPY": 2.0,
     "XAUUSD": 3.0,
+    "EURUSD": 2.0,
 }
 
 SWING_LB       = 5
@@ -82,9 +84,9 @@ MAX_HISTORY    = 1344
 ATR_PERIOD     = 14
 ATR_MULT       = 0.25
 
-STATE_FILE       = Path("state/price_history.json")
+STATE_FILE        = Path("state/price_history.json")
 LIVE_SIGNALS_FILE = Path("state/live_signals.json")
-SIGNALS_LOG      = Path("state/signals_log.csv")
+SIGNALS_LOG       = Path("state/signals_log.csv")
 
 # ══════════════════════════════════════════════
 #  1. FETCH M15 OHLC CANDLES
@@ -260,7 +262,9 @@ def run_signal_check(pair, candles, active_setups):
         lv = setup["level"]
 
         if setup["dir"] == "long":
-            pulled_back = cur <= lv + tol
+            # Hybrid: wick touched level AND close confirms above
+            candle_low  = candles[-1]["low"]
+            pulled_back = candle_low <= lv + tol
             body_above  = cur > lv
             if pulled_back and body_above:
                 sl_p = setup["sl"]
@@ -291,7 +295,9 @@ def run_signal_check(pair, candles, active_setups):
                     }
 
         else:
-            pulled_back = cur >= lv - tol
+            # Hybrid: wick touched level AND close confirms below
+            candle_high = candles[-1]["high"]
+            pulled_back = candle_high >= lv - tol
             body_below  = cur < lv
             if pulled_back and body_below:
                 sl_p = setup["sl"]
@@ -531,6 +537,8 @@ def main():
             else:
                 print(f"  [{pair}] Signal already fired recently — skipping duplicate")
 
+    if not DATA_ONLY_PAIRS:
+        pass
     for pair in DATA_ONLY_PAIRS:
         stored = len(candle_history.get(pair, []))
         print(f"  [{pair}] Data collection only — {stored} candles stored")
