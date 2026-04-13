@@ -20,6 +20,7 @@ Changes vs previous version:
   - FIX: live_signals now in separate file (no race condition)
   - FIX: Hybrid retest detection (wick touch + close confirmation)
   - EURUSD moved to active strategy pairs
+  - FIX: breakout_time stored as timestamp (fixes stale index bug)
 """
 
 import os
@@ -185,6 +186,45 @@ def calc_atr(candles, idx, period=ATR_PERIOD):
 # ══════════════════════════════════════════════
 #  5. STRATEGY LOGIC
 # ══════════════════════════════════════════════
+def find_swings(closes, candles, lb=SWING_LB, pair=None):
+    sh, sl = [], []
+    pip = PIP_SIZE.get(pair, 0.0001) if pair else 0.0001
+    min_dist = SWING_MIN_DIST * pip
+
+    for i in range(lb, len(closes) - lb):
+        win = closes[i-lb:i+lb+1]
+
+        if closes[i] == max(win):
+            if sh:
+                prev_high = closes[sh[-1]]
+                if abs(closes[i] - prev_high) < min_dist:
+                    continue
+            sh.append(i)
+
+        if closes[i] == min(win):
+            if sl:
+                prev_low = closes[sl[-1]]
+                if abs(closes[i] - prev_low) < min_dist:
+                    continue
+            sl.append(i)
+
+    return sh, sl
+
+def detect_trend(closes, sh, sl, n=TREND_N):
+    psh = sh[-n:]
+    psl = sl[-n:]
+    if len(psh) < 2 or len(psl) < 2:
+        return "neutral"
+    shv = [closes[i] for i in psh]
+    slv = [closes[i] for i in psl]
+    bull = all(shv[i] < shv[i+1] for i in range(len(shv)-1)) and \
+           all(slv[i] < slv[i+1] for i in range(len(slv)-1))
+    bear = all(shv[i] > shv[i+1] for i in range(len(shv)-1)) and \
+           all(slv[i] > slv[i+1] for i in range(len(slv)-1))
+    if bull: return "bullish"
+    if bear: return "bearish"
+    return "neutral"
+
 def run_signal_check(pair, candles, active_setups):
     if len(candles) < CANDLES_NEEDED:
         print(f"  [{pair}] Only {len(candles)} candles — need {CANDLES_NEEDED} minimum")
@@ -215,6 +255,7 @@ def run_signal_check(pair, candles, active_setups):
 
     # ── Check retest entry ──
     if setup:
+        # FIX: use timestamp comparison instead of stale index math
         breakout_time = setup.get("breakout_time")
         if breakout_time and candles[-1]["time"] <= breakout_time:
             print(f"  [{pair}] Waiting — breakout candle not yet closed")
@@ -223,6 +264,7 @@ def run_signal_check(pair, candles, active_setups):
         lv = setup["level"]
 
         if setup["dir"] == "long":
+            # Hybrid: wick touched level AND close confirms above
             candle_low  = candles[-1]["low"]
             pulled_back = candle_low <= lv + tol
             body_above  = cur > lv
@@ -255,6 +297,7 @@ def run_signal_check(pair, candles, active_setups):
                     }
 
         else:
+            # Hybrid: wick touched level AND close confirms below
             candle_high = candles[-1]["high"]
             pulled_back = candle_high >= lv - tol
             body_below  = cur < lv
@@ -306,7 +349,7 @@ def run_signal_check(pair, candles, active_setups):
                             "level":        closes[last_sh],
                             "sl":           sl_price,
                             "breakout_idx": n - 1,
-                            "breakout_time": candles[-1]["time"],  # ← added
+                            "breakout_time": candles[-1]["time"],  # FIX
                             "trend":        trend,
                             "created":      datetime.now(timezone.utc).isoformat(),
                         }
@@ -327,12 +370,11 @@ def run_signal_check(pair, candles, active_setups):
                             "level":        closes[last_sl],
                             "sl":           sl_price,
                             "breakout_idx": n - 1,
-                            "breakout_time": candles[-1]["time"],  # ← added
+                            "breakout_time": candles[-1]["time"],  # FIX
                             "trend":        trend,
                             "created":      datetime.now(timezone.utc).isoformat(),
                         }
     return None
-
 
 # ══════════════════════════════════════════════
 #  6. TELEGRAM ALERT
