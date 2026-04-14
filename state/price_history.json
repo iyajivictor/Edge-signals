@@ -47052,7 +47052,16 @@
     ]
   },
   "active_setups": {
-    "_live_signals": {}
+    "_live_signals": {},
+    "XAUUSD": {
+      "dir": "long",
+      "level": 4809.92889,
+      "sl": 4766.586867678571,
+      "breakout_idx": 1343,
+      "breakout_time": "2026-04-15 03:00:00",
+      "trend": "bullish",
+      "created": "2026-04-14T17:10:40.905799+00:00"
+    }
   },
   "fired_signals": [
     {
