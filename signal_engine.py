@@ -21,6 +21,7 @@ Changes vs previous version:
   - FIX: Hybrid retest detection (wick touch + close confirmation)
   - EURUSD moved to active strategy pairs
   - FIX: breakout_time stored as timestamp (fixes stale index bug)
+  - XAUUSD ATR_MULT increased to 0.75 (wider SL buffer for gold volatility)
 """
 
 import os
@@ -82,8 +83,14 @@ BREAK_WINDOW   = 20
 CANDLES_NEEDED = 200
 MAX_HISTORY    = 1344
 
-ATR_PERIOD     = 14
-ATR_MULT       = 0.25
+ATR_PERIOD = 14
+ATR_MULT   = {
+    "USDJPY": 0.25,
+    "GBPUSD": 0.25,
+    "AUDJPY": 0.25,
+    "XAUUSD": 0.75,
+    "EURUSD": 0.25,
+}
 
 STATE_FILE        = Path("state/price_history.json")
 LIVE_SIGNALS_FILE = Path("state/live_signals.json")
@@ -255,7 +262,6 @@ def run_signal_check(pair, candles, active_setups):
 
     # ── Check retest entry ──
     if setup:
-        # FIX: use timestamp comparison instead of stale index math
         breakout_time = setup.get("breakout_time")
         if breakout_time and candles[-1]["time"] <= breakout_time:
             print(f"  [{pair}] Waiting — breakout candle not yet closed")
@@ -264,7 +270,6 @@ def run_signal_check(pair, candles, active_setups):
         lv = setup["level"]
 
         if setup["dir"] == "long":
-            # Hybrid: wick touched level AND close confirms above
             candle_low  = candles[-1]["low"]
             pulled_back = candle_low <= lv + tol
             body_above  = cur > lv
@@ -297,7 +302,6 @@ def run_signal_check(pair, candles, active_setups):
                     }
 
         else:
-            # Hybrid: wick touched level AND close confirms below
             candle_high = candles[-1]["high"]
             pulled_back = candle_high >= lv - tol
             body_below  = cur < lv
@@ -342,16 +346,16 @@ def run_signal_check(pair, candles, active_setups):
                         last_sl_idx = valid_sl[-1]
                         sl_close    = closes[last_sl_idx]
                         atr         = calc_atr(candles, last_sl_idx)
-                        sl_price    = sl_close - ATR_MULT * atr
+                        sl_price    = sl_close - ATR_MULT[pair] * atr
                         print(f"  [{pair}] 🔍 Bullish breakout above {closes[last_sh]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f}")
                         active_setups[pair] = {
-                            "dir":          "long",
-                            "level":        closes[last_sh],
-                            "sl":           sl_price,
-                            "breakout_idx": n - 1,
-                            "breakout_time": candles[-1]["time"],  # FIX
-                            "trend":        trend,
-                            "created":      datetime.now(timezone.utc).isoformat(),
+                            "dir":           "long",
+                            "level":         closes[last_sh],
+                            "sl":            sl_price,
+                            "breakout_idx":  n - 1,
+                            "breakout_time": candles[-1]["time"],
+                            "trend":         trend,
+                            "created":       datetime.now(timezone.utc).isoformat(),
                         }
         elif trend == "bearish" and sl:
             valid_sl = [s for s in sl if s + SWING_LB <= n - 1]
@@ -363,16 +367,16 @@ def run_signal_check(pair, candles, active_setups):
                         last_sh_idx = valid_sh[-1]
                         sl_close    = closes[last_sh_idx]
                         atr         = calc_atr(candles, last_sh_idx)
-                        sl_price    = sl_close + ATR_MULT * atr
+                        sl_price    = sl_close + ATR_MULT[pair] * atr
                         print(f"  [{pair}] 🔍 Bearish breakout below {closes[last_sl]:.{DP[pair]}f} — waiting for retest | SL: {sl_price:.{DP[pair]}f}")
                         active_setups[pair] = {
-                            "dir":          "short",
-                            "level":        closes[last_sl],
-                            "sl":           sl_price,
-                            "breakout_idx": n - 1,
-                            "breakout_time": candles[-1]["time"],  # FIX
-                            "trend":        trend,
-                            "created":      datetime.now(timezone.utc).isoformat(),
+                            "dir":           "short",
+                            "level":         closes[last_sl],
+                            "sl":            sl_price,
+                            "breakout_idx":  n - 1,
+                            "breakout_time": candles[-1]["time"],
+                            "trend":         trend,
+                            "created":       datetime.now(timezone.utc).isoformat(),
                         }
     return None
 
