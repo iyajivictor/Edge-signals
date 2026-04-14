@@ -25,3 +25,11 @@ jobs:
           SHEET_ID:           ${{ secrets.SHEET_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python outcome_tracker.py
+
+      - name: Save state to repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add state/live_signals.json
+          git diff --cached --quiet || git commit -m "chore: clear resolved live signals"
+          git push
