@@ -22,10 +22,12 @@ Changes vs previous version:
   - EURUSD moved to active strategy pairs
   - FIX: breakout_time stored as timestamp (fixes stale index bug)
   - XAUUSD ATR_MULT increased to 0.75 (wider SL buffer for gold volatility)
+  - FIX: 1s delay between API calls (avoids Twelve Data rate limiting)
 """
 
 import os
 import json
+import time
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
@@ -511,6 +513,7 @@ def main():
     print("\n[1/3] Fetching M15 candles...")
     for pair in PAIRS:
         candles = fetch_candles(pair, outputsize=50)
+        time.sleep(1)
         if not candles:
             print(f"  [{pair}] No candles returned — skipping")
             continue
