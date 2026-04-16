@@ -151,40 +151,41 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         return None
 
     check_from = signal_time + timedelta(minutes=15)
-    candles = fetch_candles(pair, "15min", check_from)
+    candles = fetch_candles(pair, "15min", check_from, limit=500)  # ~5 days of M15
 
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
 
-    print(f"  [{pair}] First candle: {candles[0]['time']} close={candles[0].get('close', 'N/A')}")
-    print(f"  [{pair}] check_from was: {check_from}")
-
     entry_confirmed = False
 
     for candle in candles:
         close = candle.get("close")
+        high  = candle.get("high")
+        low   = candle.get("low")
         if close is None:
             continue
         close = float(close)
+        high  = float(high) if high else close
+        low   = float(low)  if low  else close
 
         if not entry_confirmed:
-            if side == "BUY" and close >= entry:
+            if side == "BUY" and low <= entry:      # price touched entry from above
                 entry_confirmed = True
-            elif side == "SELL" and close <= entry:
+            elif side == "SELL" and high >= entry:  # price touched entry from below
                 entry_confirmed = True
             else:
                 continue
 
         if side == "BUY":
-            if close >= tp:
+            if high >= tp:
                 return ("WIN", tp, candle["time"].isoformat())
-            if close <= sl:
+            if low <= sl:
                 return ("LOSS", sl, candle["time"].isoformat())
         else:
-            if close <= tp:
+            if low <= tp:
                 return ("WIN", tp, candle["time"].isoformat())
-            if close >= sl:
+            if high >= sl:
                 return ("LOSS", sl, candle["time"].isoformat())
 
     return None
