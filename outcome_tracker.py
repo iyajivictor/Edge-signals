@@ -160,34 +160,24 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
     entry_confirmed = False
 
     for candle in candles:
-        close = candle.get("close")
-        high  = candle.get("high")
-        low   = candle.get("low")
-        if close is None:
-            continue
-        close = float(close)
-        high  = float(high) if high else close
-        low   = float(low)  if low  else close
+    high  = candle.get("high")
+    low   = candle.get("low")
+    if high is None or low is None:
+        continue
+    high = float(high)
+    low  = float(low)
 
-        if not entry_confirmed:
-            if side == "BUY" and low <= entry:      # price touched entry from above
-                entry_confirmed = True
-            elif side == "SELL" and high >= entry:  # price touched entry from below
-                entry_confirmed = True
-            else:
-                continue
-
-        if side == "BUY":
-            if high >= tp:
-                return ("WIN", tp, candle["time"].isoformat())
-            if low <= sl:
-                return ("LOSS", sl, candle["time"].isoformat())
-        else:
-            if low <= tp:
-                return ("WIN", tp, candle["time"].isoformat())
-            if high >= sl:
-                return ("LOSS", sl, candle["time"].isoformat())
-
+    if side == "BUY":
+        if high >= tp:
+            return ("WIN", tp, candle["time"].isoformat())
+        if low <= sl:
+            return ("LOSS", sl, candle["time"].isoformat())
+    else:
+        if low <= tp:
+            return ("WIN", tp, candle["time"].isoformat())
+        if high >= sl:
+            return ("LOSS", sl, candle["time"].isoformat())
+    
     return None
 
 # ============================================
