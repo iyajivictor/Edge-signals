@@ -151,7 +151,7 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         return None
 
     check_from = signal_time + timedelta(minutes=15)
-    candles = fetch_candles(pair, "15min", check_from, limit=500)  # ~5 days of M15
+    candles = fetch_candles(pair, "15min", check_from)
 
     if not candles:
         print(f"  [{pair}] No M15 candles yet -- still pending")
