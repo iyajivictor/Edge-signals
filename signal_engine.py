@@ -34,6 +34,14 @@ from pathlib import Path
 from google.oauth2.service_account import Credentials
 import gspread
 
+# ── Sweep + FVG strategy module ──
+try:
+    from sweep_fvg import scan as sweep_fvg_scan
+    SWEEP_FVG_ENABLED = True
+except ImportError:
+    print("[WARN] sweep_fvg.py not found — Sweep+FVG strategy disabled")
+    SWEEP_FVG_ENABLED = False
+
 # ══════════════════════════════════════════════
 #  CONFIG
 # ══════════════════════════════════════════════
@@ -97,6 +105,10 @@ ATR_MULT   = {
 STATE_FILE        = Path("state/price_history.json")
 LIVE_SIGNALS_FILE = Path("state/live_signals.json")
 SIGNALS_LOG       = Path("state/signals_log.csv")
+SWEEP_FVG_LOG     = Path("state/sweep_fvg_log.csv")
+
+# Sweep+FVG only runs on EURUSD
+SWEEP_FVG_PAIR = "EURUSD"
 
 # ══════════════════════════════════════════════
 #  1. FETCH M15 OHLC CANDLES
@@ -492,8 +504,91 @@ def is_duplicate(signal, fired_signals):
     fired_signals.append({"id": sig_id, "time": now.isoformat()})
     return False
 
+
 # ══════════════════════════════════════════════
-#  10. MAIN
+#  10. SWEEP+FVG HELPERS
+# ══════════════════════════════════════════════
+def prepare_candles_for_sweep_fvg(raw_candles: list) -> list:
+    """Convert signal_engine candle format → sweep_fvg format."""
+    prepared = []
+    for c in raw_candles:
+        try:
+            prepared.append({
+                "time":   datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc),
+                "open":   float(c["open"]),
+                "high":   float(c["high"]),
+                "low":    float(c["low"]),
+                "close":  float(c["close"]),
+                "volume": 0,
+            })
+        except Exception as e:
+            print(f"  [SWEEP] Candle prep error: {e}")
+            continue
+    return prepared
+
+
+def send_telegram_sweep_fvg(signal: dict):
+    """Send Telegram alert for a Sweep+FVG signal."""
+    if not TG_TOKEN or not TG_CHAT_ID:
+        print("  [SWEEP] Telegram not configured — skipping")
+        return
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    try:
+        res = requests.post(url, json={
+            "chat_id":    TG_CHAT_ID,
+            "text":       signal["message"],
+            "parse_mode": "Markdown",
+        }, timeout=10)
+        if res.json().get("ok"):
+            print(f"  [SWEEP] ✓ Telegram sent — {signal['direction'].upper()} EURUSD")
+        else:
+            print(f"  [SWEEP] ✗ Telegram failed: {res.json()}")
+    except Exception as e:
+        print(f"  [SWEEP] ✗ Telegram error: {e}")
+
+
+def log_sweep_fvg_signal(signal: dict):
+    """Append Sweep+FVG signal to its own CSV log."""
+    SWEEP_FVG_LOG.parent.mkdir(exist_ok=True)
+    write_header = not SWEEP_FVG_LOG.exists()
+    with open(SWEEP_FVG_LOG, "a") as f:
+        if write_header:
+            f.write("fired_at,direction,entry,sl,tp,rr,session,lv_source,sweep_time\n")
+        f.write(
+            f"{signal['fired_at']},{signal['direction']},"
+            f"{signal['entry']},{signal['sl']},{signal['tp']},"
+            f"{signal['rr']},{signal['session']},"
+            f"{signal['lv_source']},{signal['sweep_time']}\n"
+        )
+
+
+def log_sweep_fvg_to_sheet(signal: dict):
+    """Log Sweep+FVG signal to Google Sheets (SweepFVG tab if available)."""
+    try:
+        raw        = os.environ.get("GOOGLE_CREDENTIALS", "")
+        creds_dict = json.loads(raw)
+        creds      = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        client   = gspread.authorize(creds)
+        workbook = client.open_by_key(os.environ.get("SHEET_ID", ""))
+        try:
+            sheet = workbook.worksheet("SweepFVG")
+        except Exception:
+            sheet = workbook.sheet1
+        sheet.append_row([
+            signal["fired_at"], "EURUSD",
+            signal["direction"].upper(),
+            signal["entry"], signal["sl"], signal["tp"], signal["rr"],
+            signal["session"], signal["lv_source"], "PENDING", "", "",
+        ])
+        print(f"  [SWEEP] ✓ Sheet logged")
+    except Exception as e:
+        print(f"  [SWEEP] ✗ Sheet log error: {e}")
+
+# ══════════════════════════════════════════════
+#  11. MAIN
 # ══════════════════════════════════════════════
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -554,7 +649,25 @@ def main():
         stored = len(candle_history.get(pair, []))
         print(f"  [{pair}] Data collection only — {stored} candles stored")
 
+    # ── Sweep+FVG scan (EURUSD only) ──────────────────────
+    sweep_signals = []
+    if SWEEP_FVG_ENABLED and SWEEP_FVG_PAIR in candle_history and candle_history[SWEEP_FVG_PAIR]:
+        print(f"\n[2b/3] Running Sweep+FVG scan on {SWEEP_FVG_PAIR}...")
+        eurusd_candles = prepare_candles_for_sweep_fvg(candle_history[SWEEP_FVG_PAIR])
+        if len(eurusd_candles) >= 100:
+            sweep_signals = sweep_fvg_scan(eurusd_candles)
+            if sweep_signals:
+                print(f"  [SWEEP] {len(sweep_signals)} signal(s) found")
+            else:
+                print(f"  [SWEEP] No signals this run")
+        else:
+            print(f"  [SWEEP] Not enough candles ({len(eurusd_candles)}) — need 100 minimum")
+    elif not SWEEP_FVG_ENABLED:
+        pass  # already warned at import time
+
     print(f"\n[3/3] Sending alerts...")
+
+    # B&R alerts
     if signals_fired:
         for sig in signals_fired:
             send_telegram(sig)
@@ -562,7 +675,16 @@ def main():
             log_signal_to_sheet(sig)
             print(f"  ✓ {sig['side']} {sig['pair']} logged")
     else:
-        print("  No new signals this run")
+        print("  No new B&R signals this run")
+
+    # Sweep+FVG alerts
+    if sweep_signals:
+        for sig in sweep_signals:
+            send_telegram_sweep_fvg(sig)
+            log_sweep_fvg_signal(sig)
+            log_sweep_fvg_to_sheet(sig)
+    else:
+        print("  No new Sweep+FVG signals this run")
 
     state["candle_history"] = candle_history
     state["active_setups"]  = active_setups
@@ -574,7 +696,8 @@ def main():
     print(f"  Data-only pairs:   {DATA_ONLY_PAIRS}")
     print(f"  Active setups:     {len([k for k in active_setups if not k.startswith('_')])}")
     print(f"  Live signals:      {list(load_live_signals().keys())}")
-    print(f"  Signals this run:  {len(signals_fired)}")
+    print(f"  B&R signals:       {len(signals_fired)}")
+    print(f"  Sweep+FVG signals: {len(sweep_signals)}")
     total = sum(len(v) for v in candle_history.values())
     print(f"  Total candles:     {total}")
     print(f"{'='*55}\n")
