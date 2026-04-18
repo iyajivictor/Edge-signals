@@ -36,7 +36,8 @@ TG_CHAT_ID       = os.environ.get("TG_CHAT_ID", "")
 SHEET_ID         = os.environ.get("SHEET_ID", "")
 GOOGLE_CREDS     = os.environ.get("GOOGLE_CREDENTIALS", "")
 
-LIVE_SIGNALS_FILE = Path("state/live_signals.json")
+LIVE_SIGNALS_FILE   = Path("state/live_signals.json")
+SWEEP_FVG_LOG_FILE  = Path("state/sweep_fvg_log.csv")
 
 TD_SYMBOLS = {
     "USDJPY": "USD/JPY",
@@ -57,14 +58,28 @@ DP = {
 # ============================================
 #  1. GOOGLE SHEETS CONNECTION
 # ============================================
-def connect_sheet():
+def connect_sheets():
+    """Connect to Google Sheets and return (main_sheet, sweep_fvg_sheet)."""
     creds_dict = json.loads(GOOGLE_CREDS)
     creds = Credentials.from_service_account_info(
         creds_dict,
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
     )
-    client = gspread.authorize(creds)
-    return client.open_by_key(SHEET_ID).sheet1
+    client   = gspread.authorize(creds)
+    workbook = client.open_by_key(SHEET_ID)
+    main_sheet = workbook.sheet1
+    try:
+        sweep_sheet = workbook.worksheet("SweepFVG")
+    except Exception:
+        sweep_sheet = None
+        print("[WARN] SweepFVG tab not found — sweep outcome tracking disabled")
+    return main_sheet, sweep_sheet
+
+
+def connect_sheet():
+    """Legacy wrapper — returns main sheet only (B&R tracker)."""
+    main, _ = connect_sheets()
+    return main
 
 # ============================================
 #  2. FLOOR TO M15
@@ -210,8 +225,106 @@ def send_result_alert(row, outcome, close_price):
     except Exception as e:
         print(f"  [{pair}] Alert error: {e}")
 
+
 # ============================================
-#  7. MAIN
+#  7. SWEEP+FVG OUTCOME TRACKING
+# ============================================
+def send_sweep_result_alert(row: dict, outcome: str, close_price: float):
+    """Telegram alert for a resolved Sweep+FVG trade."""
+    if not TG_TOKEN or not TG_CHAT_ID:
+        return
+
+    direction = row.get("direction", "").upper()
+    emoji     = "✅" if outcome == "WIN" else "❌"
+    dp        = 5  # EURUSD always 5dp
+
+    msg = (
+        f"{emoji} *SWEEP+FVG RESULT — {direction} EURUSD*\n\n"
+        f"Outcome:  *{outcome}*\n"
+        f"Entry:    `{float(row['entry']):.{dp}f}`\n"
+        f"Close:    `{float(close_price):.{dp}f}`\n"
+        f"RR:       1:{row['rr']}\n"
+        f"Session:  `{row.get('session', '')}` | Source: `{row.get('lv_source', '')}`\n\n"
+        f"_Logged in EDGE Journal → SweepFVG tab_"
+    )
+
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    try:
+        requests.post(url, json={
+            "chat_id":    TG_CHAT_ID,
+            "text":       msg,
+            "parse_mode": "Markdown",
+        }, timeout=10)
+        print(f"  [SWEEP] Result alert sent — {outcome}")
+    except Exception as e:
+        print(f"  [SWEEP] Alert error: {e}")
+
+
+def run_sweep_fvg_tracker(sweep_sheet):
+    """
+    Check all PENDING rows in the SweepFVG sheet tab and resolve outcomes.
+    Uses the same detect_outcome() logic as B&R — EURUSD M15 only.
+    """
+    if sweep_sheet is None:
+        print("  [SWEEP] No SweepFVG sheet — skipping")
+        return
+
+    print("\n  Checking SweepFVG tab...")
+    try:
+        rows = sweep_sheet.get_all_records()
+    except Exception as e:
+        print(f"  [SWEEP] Failed to read SweepFVG tab: {e}")
+        return
+
+    pending = [
+        (i + 2, r) for i, r in enumerate(rows)
+        if str(r.get("outcome", "")).strip().upper() == "PENDING"
+    ]
+
+    print(f"  [SWEEP] Pending trades: {len(pending)}")
+    if not pending:
+        print("  [SWEEP] Nothing to check")
+        return
+
+    for row_num, row in pending:
+        try:
+            entry = float(row["entry"])
+            sl    = float(row["sl"])
+            tp    = float(row["tp"])
+        except Exception as e:
+            print(f"  [SWEEP Row {row_num}] Parse error: {e} — skipping")
+            continue
+
+        direction    = str(row.get("direction", "")).strip().upper()
+        fired_at     = str(row.get("fired_at", "")).strip()
+        side         = "BUY" if direction == "LONG" else "SELL"
+
+        print(f"  [SWEEP] Checking {direction} EURUSD — fired at {fired_at}")
+
+        result = detect_outcome("EURUSD", side, entry, sl, tp, fired_at)
+
+        if result:
+            outcome, close_price, close_time = result
+            pnl_pips = round(
+                abs(close_price - entry) / 0.0001 * (1 if outcome == "WIN" else -1), 1
+            )
+            print(f"  [SWEEP] → {outcome} at {close_price} ({pnl_pips:+.1f} pips)")
+            try:
+                # Columns: fired_at|pair|direction|entry|sl|tp|rr|session|lv_source|outcome|pnl_pips|notes
+                sweep_sheet.update_cell(row_num, 10, outcome)
+                sweep_sheet.update_cell(row_num, 11, pnl_pips)
+                sweep_sheet.update_cell(row_num, 12, close_time)
+                print(f"  [SWEEP] Sheet updated ✓")
+            except Exception as e:
+                print(f"  [SWEEP] Sheet update error: {e}")
+
+            send_sweep_result_alert(row, outcome, close_price)
+        else:
+            print(f"  [SWEEP] Still pending — no update")
+
+
+# ============================================
+#  8. MAIN
 # ============================================
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -224,8 +337,10 @@ def main():
         return
 
     try:
-        sheet = connect_sheet()
+        sheet, sweep_sheet = connect_sheets()
         print("[OK] Connected to Google Sheet")
+        if sweep_sheet:
+            print("[OK] Connected to SweepFVG tab")
     except Exception as e:
         print(f"[ERROR] Sheet connection failed: {e}")
         return
@@ -280,6 +395,9 @@ def main():
             send_result_alert(row, outcome, close_price)
         else:
             print(f"  [{pair}] Still pending -- no update")
+
+    # ── Sweep+FVG outcome tracking ──
+    run_sweep_fvg_tracker(sweep_sheet)
 
     print(f"\n{'='*55}\n")
 
