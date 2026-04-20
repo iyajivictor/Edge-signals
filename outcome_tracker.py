@@ -172,24 +172,34 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
         print(f"  [{pair}] No M15 candles yet -- still pending")
         return None
 
-    for candle in candles:
-        high = candle.get("high")
-        low  = candle.get("low")
-        if high is None or low is None:
-            continue
-        high = float(high)
-        low  = float(low)
+    entry_confirmed = False
 
+    for candle in candles:
+        close = candle.get("close")
+        if close is None:
+            continue
+        close = float(close)
+
+        # Step 1: wait for entry confirmation (close crosses entry)
+        if not entry_confirmed:
+            if side == "BUY" and close >= entry:
+                entry_confirmed = True
+            elif side == "SELL" and close <= entry:
+                entry_confirmed = True
+            else:
+                continue  # skip until confirmed
+
+        # Step 2: once confirmed, detect outcome by close only
         if side == "BUY":
-            if high >= tp:
-                return ("WIN", tp, candle["time"].isoformat())
-            if low <= sl:
-                return ("LOSS", sl, candle["time"].isoformat())
-        else:
-            if low <= tp:
-                return ("WIN", tp, candle["time"].isoformat())
-            if high >= sl:
-                return ("LOSS", sl, candle["time"].isoformat())
+            if close >= tp:
+                return ("WIN", close, candle["time"].isoformat())
+            if close <= sl:
+                return ("LOSS", close, candle["time"].isoformat())
+        else:  # SELL
+            if close <= tp:
+                return ("WIN", close, candle["time"].isoformat())
+            if close >= sl:
+                return ("LOSS", close, candle["time"].isoformat())
 
     return None
 
