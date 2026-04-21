@@ -15,6 +15,7 @@ Fixes applied:
   - Close-based detection only
   - Entry confirmation required
   - Live signals cleared from separate live_signals.json (no race condition)
+  - Orphan live signal cleanup (clears stale signals with no matching PENDING row)
 
 Runs every 30 minutes via GitHub Actions cron
 """
@@ -59,7 +60,6 @@ DP = {
 #  1. GOOGLE SHEETS CONNECTION
 # ============================================
 def connect_sheets():
-    """Connect to Google Sheets and return (main_sheet, sweep_fvg_sheet)."""
     creds_dict = json.loads(GOOGLE_CREDS)
     creds = Credentials.from_service_account_info(
         creds_dict,
@@ -77,7 +77,6 @@ def connect_sheets():
 
 
 def connect_sheet():
-    """Legacy wrapper — returns main sheet only (B&R tracker)."""
     main, _ = connect_sheets()
     return main
 
@@ -180,22 +179,20 @@ def detect_outcome(pair, side, entry, sl, tp, signal_time_str):
             continue
         close = float(close)
 
-        # Step 1: wait for entry confirmation (close crosses entry)
         if not entry_confirmed:
             if side == "BUY" and close >= entry:
                 entry_confirmed = True
             elif side == "SELL" and close <= entry:
                 entry_confirmed = True
             else:
-                continue  # skip until confirmed
+                continue
 
-        # Step 2: once confirmed, detect outcome by close only
         if side == "BUY":
             if close >= tp:
                 return ("WIN", close, candle["time"].isoformat())
             if close <= sl:
                 return ("LOSS", close, candle["time"].isoformat())
-        else:  # SELL
+        else:
             if close <= tp:
                 return ("WIN", close, candle["time"].isoformat())
             if close >= sl:
@@ -235,18 +232,16 @@ def send_result_alert(row, outcome, close_price):
     except Exception as e:
         print(f"  [{pair}] Alert error: {e}")
 
-
 # ============================================
 #  7. SWEEP+FVG OUTCOME TRACKING
 # ============================================
 def send_sweep_result_alert(row: dict, outcome: str, close_price: float):
-    """Telegram alert for a resolved Sweep+FVG trade."""
     if not TG_TOKEN or not TG_CHAT_ID:
         return
 
     direction = row.get("direction", "").upper()
     emoji     = "✅" if outcome == "WIN" else "❌"
-    dp        = 5  # EURUSD always 5dp
+    dp        = 5
 
     msg = (
         f"{emoji} *SWEEP+FVG RESULT — {direction} EURUSD*\n\n"
@@ -271,10 +266,6 @@ def send_sweep_result_alert(row: dict, outcome: str, close_price: float):
 
 
 def run_sweep_fvg_tracker(sweep_sheet):
-    """
-    Check all PENDING rows in the SweepFVG sheet tab and resolve outcomes.
-    Uses the same detect_outcome() logic as B&R — EURUSD M15 only.
-    """
     if sweep_sheet is None:
         print("  [SWEEP] No SweepFVG sheet — skipping")
         return
@@ -305,9 +296,9 @@ def run_sweep_fvg_tracker(sweep_sheet):
             print(f"  [SWEEP Row {row_num}] Parse error: {e} — skipping")
             continue
 
-        direction    = str(row.get("direction", "")).strip().upper()
-        fired_at     = str(row.get("fired_at", "")).strip()
-        side         = "BUY" if direction == "LONG" else "SELL"
+        direction = str(row.get("direction", "")).strip().upper()
+        fired_at  = str(row.get("fired_at", "")).strip()
+        side      = "BUY" if direction == "LONG" else "SELL"
 
         print(f"  [SWEEP] Checking {direction} EURUSD — fired at {fired_at}")
 
@@ -320,7 +311,6 @@ def run_sweep_fvg_tracker(sweep_sheet):
             )
             print(f"  [SWEEP] → {outcome} at {close_price} ({pnl_pips:+.1f} pips)")
             try:
-                # Columns: fired_at|pair|direction|entry|sl|tp|rr|session|lv_source|outcome|pnl_pips|notes
                 sweep_sheet.update_cell(row_num, 10, outcome)
                 sweep_sheet.update_cell(row_num, 11, pnl_pips)
                 sweep_sheet.update_cell(row_num, 12, close_time)
@@ -332,9 +322,31 @@ def run_sweep_fvg_tracker(sweep_sheet):
         else:
             print(f"  [SWEEP] Still pending — no update")
 
+# ============================================
+#  8. ORPHAN LIVE SIGNAL CLEANUP
+# ============================================
+def cleanup_orphan_live_signals(pending_pairs: set):
+    """
+    Clear any live signals that have no matching PENDING row in the sheet.
+    This catches signals that were never cleared due to a previous crash or
+    git push failure.
+    """
+    print("\n  Checking for orphaned live signals...")
+    live = load_live_signals()
+
+    if not live:
+        print("  No live signals on file.")
+        return
+
+    for pair in list(live.keys()):
+        if pair not in pending_pairs:
+            print(f"  [{pair}] Orphaned live signal — no PENDING trade in sheet. Clearing.")
+            clear_live_signal(pair)
+        else:
+            print(f"  [{pair}] Live signal valid — trade still PENDING.")
 
 # ============================================
-#  8. MAIN
+#  9. MAIN
 # ============================================
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -367,44 +379,47 @@ def main():
 
     print(f"\n  Pending trades: {len(pending)}")
 
+    # ── Orphan cleanup runs regardless of pending count ──
+    pending_pairs = {r.get("pair", "").strip().upper() for _, r in pending}
+    cleanup_orphan_live_signals(pending_pairs)
+
     if not pending:
         print("  Nothing to check -- all trades resolved")
-        return
-
-    for row_num, row in pending:
-        pair = row.get("pair", "").strip().upper()
-        side = row.get("side", "").strip().upper()
-
-        try:
-            entry = float(row["entry"])
-            sl    = float(row["sl"])
-            tp    = float(row["tp"])
-            print(f"  [{pair}] entry={entry} sl={sl} tp={tp}")
-        except Exception as e:
-            print(f"  [Row {row_num}] Parse error: {e} -- skipping")
-            continue
-
-        signal_time = row.get("signal_time", "").strip()
-        print(f"\n  Checking [{pair}] {side} -- signalled at {signal_time}")
-
-        result = detect_outcome(pair, side, entry, sl, tp, signal_time)
-
-        if result:
-            outcome, close_price, close_time = result
-            print(f"  [{pair}] -> {outcome} at {close_price}")
+    else:
+        for row_num, row in pending:
+            pair = row.get("pair", "").strip().upper()
+            side = row.get("side", "").strip().upper()
 
             try:
-                sheet.update_cell(row_num, 9,  outcome)
-                sheet.update_cell(row_num, 10, close_price)
-                sheet.update_cell(row_num, 11, close_time)
-                print(f"  [{pair}] Sheet updated ✓")
-                clear_live_signal(pair)
+                entry = float(row["entry"])
+                sl    = float(row["sl"])
+                tp    = float(row["tp"])
+                print(f"  [{pair}] entry={entry} sl={sl} tp={tp}")
             except Exception as e:
-                print(f"  [{pair}] Sheet update error: {e}")
+                print(f"  [Row {row_num}] Parse error: {e} -- skipping")
+                continue
 
-            send_result_alert(row, outcome, close_price)
-        else:
-            print(f"  [{pair}] Still pending -- no update")
+            signal_time = row.get("signal_time", "").strip()
+            print(f"\n  Checking [{pair}] {side} -- signalled at {signal_time}")
+
+            result = detect_outcome(pair, side, entry, sl, tp, signal_time)
+
+            if result:
+                outcome, close_price, close_time = result
+                print(f"  [{pair}] -> {outcome} at {close_price}")
+
+                try:
+                    sheet.update_cell(row_num, 9,  outcome)
+                    sheet.update_cell(row_num, 10, close_price)
+                    sheet.update_cell(row_num, 11, close_time)
+                    print(f"  [{pair}] Sheet updated ✓")
+                    clear_live_signal(pair)
+                except Exception as e:
+                    print(f"  [{pair}] Sheet update error: {e}")
+
+                send_result_alert(row, outcome, close_price)
+            else:
+                print(f"  [{pair}] Still pending -- no update")
 
     # ── Sweep+FVG outcome tracking ──
     run_sweep_fvg_tracker(sweep_sheet)
