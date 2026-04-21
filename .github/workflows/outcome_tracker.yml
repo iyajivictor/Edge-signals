@@ -29,14 +29,14 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python outcome_tracker.py
 
-      - name: Save state to repo
+     - name: Save state to repo
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add state/live_signals.json
-          git stash
+          STASHED=$(git stash 2>&1)
           git pull --rebase origin main
-          git stash pop
+          echo "$STASHED" | grep -q "No local changes" || git stash pop
           git add state/live_signals.json
           git diff --cached --quiet || git commit -m "chore: clear resolved live signals"
           git push
