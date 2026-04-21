@@ -46,8 +46,10 @@ SESSIONS = {
     'NewYork': (13, 17),
 }
 
-# State file — separate from Break & Retest to avoid conflicts
-STATE_FILE = 'state/sweep_fvg_state.json'
+# State files — separate from Break & Retest to avoid conflicts
+STATE_FILE          = 'state/sweep_fvg_state.json'
+FIRED_SIGNALS_FILE  = 'state/sweep_fvg_fired.json'
+SIGNAL_TTL_HOURS    = 4   # how long a fired signal is remembered (prevents refiring)
 
 
 # ── SESSION HELPERS ────────────────────────────────────────────────────────
@@ -297,6 +299,56 @@ def format_signal(setup: dict) -> dict:
     }
 
 
+# ── PERSISTENT DEDUP ──────────────────────────────────────────────────────
+def load_fired_signals() -> dict:
+    """Load previously fired signals from disk."""
+    path = FIRED_SIGNALS_FILE
+    if os.path.exists(path):
+        try:
+            with open(path, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_fired_signals(fired: dict):
+    """Persist fired signals to disk."""
+    os.makedirs(os.path.dirname(FIRED_SIGNALS_FILE), exist_ok=True)
+    with open(FIRED_SIGNALS_FILE, 'w') as f:
+        json.dump(fired, f, indent=2)
+
+
+def is_already_fired(dedup_key: str, fired: dict) -> bool:
+    """Return True if this signal was fired within TTL window."""
+    if dedup_key not in fired:
+        return False
+    try:
+        fired_at = datetime.fromisoformat(fired[dedup_key])
+        age_hours = (datetime.now(timezone.utc) - fired_at).total_seconds() / 3600
+        return age_hours < SIGNAL_TTL_HOURS
+    except Exception:
+        return False
+
+
+def mark_as_fired(dedup_key: str, fired: dict):
+    """Record that a signal was fired right now."""
+    fired[dedup_key] = datetime.now(timezone.utc).isoformat()
+    # Prune old entries beyond TTL to keep file small
+    now = datetime.now(timezone.utc)
+    pruned = {}
+    for k, v in fired.items():
+        try:
+            age = (now - datetime.fromisoformat(v)).total_seconds() / 3600
+            if age < SIGNAL_TTL_HOURS * 2:
+                pruned[k] = v
+        except Exception:
+            pass
+    fired.clear()
+    fired.update(pruned)
+    fired[dedup_key] = now.isoformat()
+
+
 # ── CORE SCAN FUNCTION ─────────────────────────────────────────────────────
 def scan(candles: list[dict], send_signal_fn=None) -> list[dict]:
     """
@@ -315,7 +367,7 @@ def scan(candles: list[dict], send_signal_fn=None) -> list[dict]:
         return []
 
     signals_fired  = []
-    fired_keys     = set()   # dedup: (direction, entry, sl)
+    fired          = load_fired_signals()   # persistent dedup across runs
     latest         = candles[-1]
     latest_time    = latest['time']
 
@@ -449,11 +501,12 @@ def scan(candles: list[dict], send_signal_fn=None) -> list[dict]:
             if rr < MIN_RR:
                 continue
 
-            # ── Deduplication check ────────────────────────────────────────
-            dedup_key = (direction, fvg_mid, sl_val)
-            if dedup_key in fired_keys:
+            # ── Persistent deduplication check ────────────────────────────
+            dedup_key = f"{direction}_{fvg_mid}_{sl_val}"
+            if is_already_fired(dedup_key, fired):
+                logger.info(f"sweep_fvg: Duplicate suppressed — {dedup_key}")
                 continue
-            fired_keys.add(dedup_key)
+            mark_as_fired(dedup_key, fired)
 
             # ── Signal confirmed ───────────────────────────────────────────
             setup = {
@@ -482,6 +535,9 @@ def scan(candles: list[dict], send_signal_fn=None) -> list[dict]:
                     send_signal_fn(signal)
                 except Exception as e:
                     logger.error(f"sweep_fvg: Failed to send signal: {e}")
+
+    # Persist fired signals so next cron run doesn't re-fire same setup
+    save_fired_signals(fired)
 
     return signals_fired
 
