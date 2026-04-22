@@ -285,6 +285,7 @@ def format_signal(setup: dict) -> dict:
         'session':    session,
         'lv_source':  lv_source,
         'sweep_time': sweep_time,
+        'fired_at':   setup.get('fired_at', ''),
         'message': (
             f"{emoji} *EURUSD — Sweep+FVG Signal*\n"
             f"Direction : `{side}`\n"
