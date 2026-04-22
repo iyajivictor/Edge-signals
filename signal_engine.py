@@ -563,7 +563,7 @@ def log_sweep_fvg_signal(signal: dict):
 
 
 def log_sweep_fvg_to_sheet(signal: dict):
-    """Log Sweep+FVG signal to Google Sheets (SweepFVG tab if available)."""
+    """Log Sweep+FVG signal to Google Sheets (SweepFVG tab)."""
     try:
         raw        = os.environ.get("GOOGLE_CREDENTIALS", "")
         creds_dict = json.loads(raw)
@@ -573,16 +573,27 @@ def log_sweep_fvg_to_sheet(signal: dict):
         )
         client   = gspread.authorize(creds)
         workbook = client.open_by_key(os.environ.get("SHEET_ID", ""))
+
+        # List all tabs for debugging
+        all_tabs = [ws.title for ws in workbook.worksheets()]
+        print(f"  [SWEEP] Available tabs: {all_tabs}")
+
         try:
             sheet = workbook.worksheet("SweepFVG")
-        except Exception:
-            sheet = workbook.sheet1
-        sheet.append_row([
+            print(f"  [SWEEP] Found SweepFVG tab ✓")
+        except Exception as tab_err:
+            print(f"  [SWEEP] ✗ SweepFVG tab not found: {tab_err}")
+            print(f"  [SWEEP] Available tabs were: {all_tabs}")
+            return
+
+        row = [
             signal["fired_at"], "EURUSD",
             signal["direction"].upper(),
             signal["entry"], signal["sl"], signal["tp"], signal["rr"],
             signal["session"], signal["lv_source"], "PENDING", "", "",
-        ])
+        ]
+        print(f"  [SWEEP] Writing row: {row}")
+        sheet.append_row(row)
         print(f"  [SWEEP] ✓ Sheet logged")
     except Exception as e:
         print(f"  [SWEEP] ✗ Sheet log error: {e}")
