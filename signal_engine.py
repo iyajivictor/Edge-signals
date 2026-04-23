@@ -23,6 +23,8 @@ Changes vs previous version:
   - FIX: breakout_time stored as timestamp (fixes stale index bug)
   - XAUUSD ATR_MULT increased to 0.75 (wider SL buffer for gold volatility)
   - FIX: 1s delay between API calls (avoids Twelve Data rate limiting)
+  - HTF cache added: H1 fetched on the hour, H4 at 00/04/08/12/16/20
+  - Sweep+FVG scan now runs on all 5 pairs with H1 + H4 candles
 """
 
 import os
@@ -107,11 +109,16 @@ LIVE_SIGNALS_FILE = Path("state/live_signals.json")
 SIGNALS_LOG       = Path("state/signals_log.csv")
 SWEEP_FVG_LOG     = Path("state/sweep_fvg_log.csv")
 
-# Sweep+FVG only runs on EURUSD
-SWEEP_FVG_PAIR = "EURUSD"
+# HTF candle counts to fetch when cache is stale
+H1_FETCH_SIZE = 50   # ~50 hours of H1
+H4_FETCH_SIZE = 30   # ~5 days of H4
+
+# H4 boundary hours (UTC) — re-fetch at these hours only
+H4_HOURS = {0, 4, 8, 12, 16, 20}
+
 
 # ══════════════════════════════════════════════
-#  1. FETCH M15 OHLC CANDLES
+#  1a. FETCH M15 OHLC CANDLES
 # ══════════════════════════════════════════════
 def fetch_candles(pair, outputsize=50):
     symbol = TD_SYMBOLS[pair]
@@ -146,6 +153,125 @@ def fetch_candles(pair, outputsize=50):
         print(f"  [{pair}] Fetch failed: {e}")
         return []
 
+
+# ══════════════════════════════════════════════
+#  1b. HTF CACHE — H1 / H4 FETCH + CACHE
+# ══════════════════════════════════════════════
+def fetch_htf_candles(pair: str, interval: str, outputsize: int) -> list:
+    """
+    Fetch H1 or H4 candles from Twelve Data.
+    interval: '1h' or '4h'
+    Returns list of candle dicts with 'time' as string.
+    """
+    symbol = TD_SYMBOLS[pair]
+    url = (
+        f"https://api.twelvedata.com/time_series"
+        f"?symbol={symbol}"
+        f"&interval={interval}"
+        f"&outputsize={outputsize}"
+        f"&apikey={TWELVE_DATA_KEY}"
+    )
+    try:
+        res  = requests.get(url, timeout=15)
+        data = res.json()
+        if data.get("status") == "error":
+            print(f"  [{pair}] HTF {interval} API error: {data.get('message')}")
+            return []
+        candles = []
+        for c in reversed(data.get("values", [])):
+            try:
+                candles.append({
+                    "time":  c["datetime"],
+                    "open":  float(c["open"]),
+                    "high":  float(c["high"]),
+                    "low":   float(c["low"]),
+                    "close": float(c["close"]),
+                })
+            except Exception as e:
+                print(f"  [{pair}] HTF candle parse error: {e}")
+                continue
+        return candles
+    except Exception as e:
+        print(f"  [{pair}] HTF fetch failed: {e}")
+        return []
+
+
+def should_refresh_h1(now_utc: datetime, cache_entry: dict) -> bool:
+    """H1 refreshes once per hour — when current minute is 0-14 (first cron of the hour)."""
+    last_fetched = cache_entry.get("fetched_hour")
+    return last_fetched != now_utc.hour
+
+
+def should_refresh_h4(now_utc: datetime, cache_entry: dict) -> bool:
+    """H4 refreshes only at 00, 04, 08, 12, 16, 20 UTC — first cron of that 4hr block."""
+    if now_utc.hour not in H4_HOURS:
+        return False
+    last_fetched_hour = cache_entry.get("fetched_hour")
+    return last_fetched_hour != now_utc.hour
+
+
+def load_htf_cache(state: dict) -> dict:
+    """
+    Returns htf_cache from state.
+    Structure: { pair: { 'h1': { 'candles': [...], 'fetched_hour': int },
+                         'h4': { 'candles': [...], 'fetched_hour': int } } }
+    """
+    return state.get("htf_cache", {})
+
+
+def save_htf_cache(state: dict, htf_cache: dict):
+    state["htf_cache"] = htf_cache
+
+
+def get_htf_candles_for_pair(pair: str,
+                              htf_cache: dict,
+                              now_utc: datetime) -> tuple[list, list]:
+    """
+    Return (h1_candles, h4_candles) for the given pair.
+    Re-fetches H1 on the hour, H4 at H4_HOURS boundaries.
+    Updates htf_cache in place.
+
+    Returns raw string-time candle dicts (conversion done in prepare_candles_for_sweep_fvg).
+    """
+    if pair not in htf_cache:
+        htf_cache[pair] = {
+            "h1": {"candles": [], "fetched_hour": -1},
+            "h4": {"candles": [], "fetched_hour": -1},
+        }
+
+    pair_cache = htf_cache[pair]
+
+    # ── H1 ─────────────────────────────────────────────────────────────────
+    if should_refresh_h1(now_utc, pair_cache["h1"]):
+        print(f"  [{pair}] Fetching H1 candles (hour={now_utc.hour})...")
+        h1_raw = fetch_htf_candles(pair, "1h", H1_FETCH_SIZE)
+        time.sleep(1)   # rate-limit guard
+        if h1_raw:
+            pair_cache["h1"]["candles"]      = h1_raw
+            pair_cache["h1"]["fetched_hour"] = now_utc.hour
+            print(f"  [{pair}] H1 cache updated — {len(h1_raw)} candles")
+        else:
+            print(f"  [{pair}] H1 fetch failed — using cached data")
+    else:
+        print(f"  [{pair}] H1 cache hit (fetched hour={pair_cache['h1']['fetched_hour']})")
+
+    # ── H4 ─────────────────────────────────────────────────────────────────
+    if should_refresh_h4(now_utc, pair_cache["h4"]):
+        print(f"  [{pair}] Fetching H4 candles (hour={now_utc.hour})...")
+        h4_raw = fetch_htf_candles(pair, "4h", H4_FETCH_SIZE)
+        time.sleep(1)   # rate-limit guard
+        if h4_raw:
+            pair_cache["h4"]["candles"]      = h4_raw
+            pair_cache["h4"]["fetched_hour"] = now_utc.hour
+            print(f"  [{pair}] H4 cache updated — {len(h4_raw)} candles")
+        else:
+            print(f"  [{pair}] H4 fetch failed — using cached data")
+    else:
+        print(f"  [{pair}] H4 cache hit (fetched hour={pair_cache['h4']['fetched_hour']})")
+
+    return pair_cache["h1"]["candles"], pair_cache["h4"]["candles"]
+
+
 # ══════════════════════════════════════════════
 #  2. STATE MANAGEMENT
 # ══════════════════════════════════════════════
@@ -160,6 +286,7 @@ def load_state():
         "candle_history": {p: [] for p in PAIRS},
         "active_setups":  {},
         "fired_signals":  [],
+        "htf_cache":      {},
     }
 
 def save_state(state):
@@ -448,7 +575,7 @@ def log_signal(signal):
             f"{signal['time']},{signal['pair']},{signal['side']},"
             f"{signal['entry']},{signal['sl']},{signal['tp']},"
             f"{signal['sl_pips']},{signal['rr']},{signal['level']},"
-            f"{signal.get('trend','')}\n"
+            f"{signal.get('trend','')}\\n"
         )
 
 # ══════════════════════════════════════════════
@@ -509,7 +636,7 @@ def is_duplicate(signal, fired_signals):
 #  10. SWEEP+FVG HELPERS
 # ══════════════════════════════════════════════
 def prepare_candles_for_sweep_fvg(raw_candles: list) -> list:
-    """Convert signal_engine candle format → sweep_fvg format."""
+    """Convert signal_engine candle format → sweep_fvg format (datetime objects)."""
     prepared = []
     for c in raw_candles:
         try:
@@ -540,7 +667,7 @@ def send_telegram_sweep_fvg(signal: dict):
             "parse_mode": "Markdown",
         }, timeout=10)
         if res.json().get("ok"):
-            print(f"  [SWEEP] ✓ Telegram sent — {signal['direction'].upper()} EURUSD")
+            print(f"  [SWEEP] ✓ Telegram sent — {signal['direction'].upper()} {signal['pair']}")
         else:
             print(f"  [SWEEP] ✗ Telegram failed: {res.json()}")
     except Exception as e:
@@ -553,11 +680,12 @@ def log_sweep_fvg_signal(signal: dict):
     write_header = not SWEEP_FVG_LOG.exists()
     with open(SWEEP_FVG_LOG, "a") as f:
         if write_header:
-            f.write("fired_at,direction,entry,sl,tp,rr,session,lv_source,sweep_time\n")
+            f.write("fired_at,pair,direction,entry,sl,tp,rr,session,h1_bias,tp_source,lv_source,sweep_time\n")
         f.write(
-            f"{signal['fired_at']},{signal['direction']},"
+            f"{signal['fired_at']},{signal['pair']},{signal['direction']},"
             f"{signal['entry']},{signal['sl']},{signal['tp']},"
             f"{signal['rr']},{signal['session']},"
+            f"{signal.get('h1_bias','')},{signal.get('tp_source','')},"
             f"{signal['lv_source']},{signal['sweep_time']}\n"
         )
 
@@ -574,7 +702,6 @@ def log_sweep_fvg_to_sheet(signal: dict):
         client   = gspread.authorize(creds)
         workbook = client.open_by_key(os.environ.get("SHEET_ID", ""))
 
-        # List all tabs for debugging
         all_tabs = [ws.title for ws in workbook.worksheets()]
         print(f"  [SWEEP] Available tabs: {all_tabs}")
 
@@ -587,10 +714,15 @@ def log_sweep_fvg_to_sheet(signal: dict):
             return
 
         row = [
-            signal["fired_at"], "EURUSD",
+            signal["fired_at"],
+            signal["pair"],
             signal["direction"].upper(),
             signal["entry"], signal["sl"], signal["tp"], signal["rr"],
-            signal["session"], signal["lv_source"], "PENDING", "", "",
+            signal["session"],
+            signal.get("h1_bias", ""),
+            signal.get("tp_source", ""),
+            signal["lv_source"],
+            "PENDING", "", "",
         ]
         print(f"  [SWEEP] Writing row: {row}")
         sheet.append_row(row)
@@ -602,9 +734,10 @@ def log_sweep_fvg_to_sheet(signal: dict):
 #  11. MAIN
 # ══════════════════════════════════════════════
 def main():
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now_utc = datetime.now(timezone.utc)
+    now_str = now_utc.strftime("%Y-%m-%d %H:%M UTC")
     print(f"\n{'='*55}")
-    print(f"  EDGE Signal Engine — {now}")
+    print(f"  EDGE Signal Engine — {now_str}")
     print(f"{'='*55}")
 
     if not TWELVE_DATA_KEY:
@@ -615,7 +748,9 @@ def main():
     candle_history = state["candle_history"]
     active_setups  = state["active_setups"]
     fired_signals  = state["fired_signals"]
+    htf_cache      = load_htf_cache(state)
 
+    # ── [1/3] Fetch M15 candles ──────────────────────────────────────────
     print("\n[1/3] Fetching M15 candles...")
     for pair in PAIRS:
         candles = fetch_candles(pair, outputsize=50)
@@ -629,6 +764,12 @@ def main():
         latest = candle_history[pair][-1]
         print(f"  {pair}: {len(candle_history[pair])} candles stored | Latest close: {latest['close']:.{DP[pair]}f}")
 
+    # ── [1b/3] Refresh HTF cache (H1 hourly, H4 at 4hr boundaries) ───────
+    print(f"\n[1b/3] Checking HTF cache (H1 on-hour | H4 at {sorted(H4_HOURS)})...")
+    for pair in STRATEGY_PAIRS:
+        get_htf_candles_for_pair(pair, htf_cache, now_utc)
+
+    # ── [2/3] Run B&R signal scan ─────────────────────────────────────────
     print("\n[2/3] Running signal scan...")
     signals_fired = []
     live = load_live_signals()
@@ -654,28 +795,47 @@ def main():
             else:
                 print(f"  [{pair}] Signal already fired recently — skipping duplicate")
 
-    if not DATA_ONLY_PAIRS:
-        pass
     for pair in DATA_ONLY_PAIRS:
         stored = len(candle_history.get(pair, []))
         print(f"  [{pair}] Data collection only — {stored} candles stored")
 
-    # ── Sweep+FVG scan (EURUSD only) ──────────────────────
+    # ── [2b/3] Sweep+FVG scan — all 5 pairs ──────────────────────────────
     sweep_signals = []
-    if SWEEP_FVG_ENABLED and SWEEP_FVG_PAIR in candle_history and candle_history[SWEEP_FVG_PAIR]:
-        print(f"\n[2b/3] Running Sweep+FVG scan on {SWEEP_FVG_PAIR}...")
-        eurusd_candles = prepare_candles_for_sweep_fvg(candle_history[SWEEP_FVG_PAIR])
-        if len(eurusd_candles) >= 100:
-            sweep_signals = sweep_fvg_scan(eurusd_candles)
-            if sweep_signals:
-                print(f"  [SWEEP] {len(sweep_signals)} signal(s) found")
-            else:
-                print(f"  [SWEEP] No signals this run")
-        else:
-            print(f"  [SWEEP] Not enough candles ({len(eurusd_candles)}) — need 100 minimum")
-    elif not SWEEP_FVG_ENABLED:
-        pass  # already warned at import time
+    if SWEEP_FVG_ENABLED:
+        print(f"\n[2b/3] Running Sweep+FVG scan on all pairs...")
+        for pair in STRATEGY_PAIRS:
+            if pair not in candle_history or not candle_history[pair]:
+                print(f"  [{pair}] No M15 history — skipping Sweep+FVG")
+                continue
 
+            m15_prepared = prepare_candles_for_sweep_fvg(candle_history[pair])
+            if len(m15_prepared) < 100:
+                print(f"  [{pair}] Not enough M15 candles ({len(m15_prepared)}) — need 100 minimum")
+                continue
+
+            # Pull HTF from cache (already refreshed in [1b/3])
+            h1_raw, h4_raw = htf_cache.get(pair, {}).get("h1", {}).get("candles", []), \
+                             htf_cache.get(pair, {}).get("h4", {}).get("candles", [])
+
+            h1_prepared = prepare_candles_for_sweep_fvg(h1_raw) if h1_raw else []
+            h4_prepared = prepare_candles_for_sweep_fvg(h4_raw) if h4_raw else []
+
+            print(f"  [{pair}] Sweep+FVG scan | M15={len(m15_prepared)} H1={len(h1_prepared)} H4={len(h4_prepared)}")
+
+            pair_sweep_signals = sweep_fvg_scan(
+                m15_candles=m15_prepared,
+                h1_candles=h1_prepared if h1_prepared else None,
+                h4_candles=h4_prepared if h4_prepared else None,
+                pair=pair,
+            )
+
+            if pair_sweep_signals:
+                print(f"  [{pair}] 🔔 {len(pair_sweep_signals)} Sweep+FVG signal(s) found")
+                sweep_signals.extend(pair_sweep_signals)
+            else:
+                print(f"  [{pair}] No Sweep+FVG signals this run")
+
+    # ── [3/3] Send alerts ─────────────────────────────────────────────────
     print(f"\n[3/3] Sending alerts...")
 
     # B&R alerts
@@ -697,9 +857,11 @@ def main():
     else:
         print("  No new Sweep+FVG signals this run")
 
+    # ── Persist state ──────────────────────────────────────────────────────
     state["candle_history"] = candle_history
     state["active_setups"]  = active_setups
     state["fired_signals"]  = fired_signals
+    save_htf_cache(state, htf_cache)
     save_state(state)
 
     print(f"\n{'='*55}")
@@ -711,8 +873,11 @@ def main():
     print(f"  Sweep+FVG signals: {len(sweep_signals)}")
     total = sum(len(v) for v in candle_history.values())
     print(f"  Total candles:     {total}")
+    h1_cached = sum(1 for p in STRATEGY_PAIRS if htf_cache.get(p, {}).get("h1", {}).get("candles"))
+    h4_cached = sum(1 for p in STRATEGY_PAIRS if htf_cache.get(p, {}).get("h4", {}).get("candles"))
+    print(f"  H1 cache:          {h1_cached}/{len(STRATEGY_PAIRS)} pairs")
+    print(f"  H4 cache:          {h4_cached}/{len(STRATEGY_PAIRS)} pairs")
     print(f"{'='*55}\n")
 
 if __name__ == "__main__":
     main()
-  
