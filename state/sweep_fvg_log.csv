@@ -6,3 +6,4 @@ fired_at,direction,entry,sl,tp,rr,session,lv_source,sweep_time
 2026-04-24 10:00:00+00:00,XAUUSD,long,4728.23194,4723.26975,4771.44226,8.71,London,neutral,h4_pool,AsianL,2026-04-24 00:15:00+00:00
 2026-04-24 10:00:00+00:00,XAUUSD,short,4725.63801,4731.54965,4668.28518,9.7,London,neutral,h4_pool,NewYorkH,2026-04-24 01:45:00+00:00
 2026-04-24 10:00:00+00:00,EURUSD,long,1.17014,1.16958,1.17804,14.11,London,bullish,h4_pool,AsianL,2026-04-24 00:15:00+00:00
+2026-04-24 00:30:00+00:00,GBPUSD,long,1.34977,1.34914,1.35299,5.11,Asian,neutral,h4_pool,LondonL,2026-04-24 00:00:00+00:00
