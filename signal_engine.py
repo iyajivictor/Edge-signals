@@ -223,53 +223,76 @@ def save_htf_cache(state: dict, htf_cache: dict):
     state["htf_cache"] = htf_cache
 
 
-def get_htf_candles_for_pair(pair: str,
-                              htf_cache: dict,
-                              now_utc: datetime) -> tuple[list, list]:
-    """
-    Return (h1_candles, h4_candles) for the given pair.
-    Re-fetches H1 on the hour, H4 at H4_HOURS boundaries.
-    Updates htf_cache in place.
-
-    Returns raw string-time candle dicts (conversion done in prepare_candles_for_sweep_fvg).
-    """
+def _ensure_pair_cache(pair: str, htf_cache: dict):
+    """Initialise cache entry for a pair if missing."""
     if pair not in htf_cache:
         htf_cache[pair] = {
             "h1": {"candles": [], "fetched_hour": -1},
             "h4": {"candles": [], "fetched_hour": -1},
         }
 
-    pair_cache = htf_cache[pair]
 
-    # ── H1 ─────────────────────────────────────────────────────────────────
-    if should_refresh_h1(now_utc, pair_cache["h1"]):
+def refresh_h1_cache(htf_cache: dict, now_utc: datetime):
+    """
+    Fetch H1 for every pair that needs it, with 8s between calls.
+    All 5 H1 fetches stay within one 60-second window (5 x 8s = 40s).
+    """
+    needs_refresh = []
+    for pair in STRATEGY_PAIRS:
+        _ensure_pair_cache(pair, htf_cache)
+        if should_refresh_h1(now_utc, htf_cache[pair]["h1"]):
+            needs_refresh.append(pair)
+        else:
+            print(f"  [{pair}] H1 cache hit (fetched hour={htf_cache[pair]['h1']['fetched_hour']})")
+
+    if not needs_refresh:
+        return
+
+    print(f"  Fetching H1 for: {needs_refresh} (8s between calls)")
+    for i, pair in enumerate(needs_refresh):
         print(f"  [{pair}] Fetching H1 candles (hour={now_utc.hour})...")
         h1_raw = fetch_htf_candles(pair, "1h", H1_FETCH_SIZE)
-        time.sleep(1)   # rate-limit guard
         if h1_raw:
-            pair_cache["h1"]["candles"]      = h1_raw
-            pair_cache["h1"]["fetched_hour"] = now_utc.hour
+            htf_cache[pair]["h1"]["candles"]      = h1_raw
+            htf_cache[pair]["h1"]["fetched_hour"] = now_utc.hour
             print(f"  [{pair}] H1 cache updated — {len(h1_raw)} candles")
         else:
             print(f"  [{pair}] H1 fetch failed — using cached data")
-    else:
-        print(f"  [{pair}] H1 cache hit (fetched hour={pair_cache['h1']['fetched_hour']})")
+        if i < len(needs_refresh) - 1:
+            time.sleep(12)   # 12s gap keeps all 5 calls under 8 credits/min
 
-    # ── H4 ─────────────────────────────────────────────────────────────────
-    if should_refresh_h4(now_utc, pair_cache["h4"]):
+
+def refresh_h4_cache(htf_cache: dict, now_utc: datetime):
+    """
+    Fetch H4 for every pair that needs it, with 8s between calls.
+    Only runs at H4 boundary hours (00, 04, 08, 12, 16, 20 UTC).
+    """
+    needs_refresh = []
+    for pair in STRATEGY_PAIRS:
+        _ensure_pair_cache(pair, htf_cache)
+        if should_refresh_h4(now_utc, htf_cache[pair]["h4"]):
+            needs_refresh.append(pair)
+        else:
+            print(f"  [{pair}] H4 cache hit (fetched hour={htf_cache[pair]['h4']['fetched_hour']})")
+
+    if not needs_refresh:
+        return
+
+    print(f"  Fetching H4 for: {needs_refresh} (8s between calls)")
+    for i, pair in enumerate(needs_refresh):
         print(f"  [{pair}] Fetching H4 candles (hour={now_utc.hour})...")
         h4_raw = fetch_htf_candles(pair, "4h", H4_FETCH_SIZE)
-        time.sleep(1)   # rate-limit guard
         if h4_raw:
-            pair_cache["h4"]["candles"]      = h4_raw
-            pair_cache["h4"]["fetched_hour"] = now_utc.hour
+            htf_cache[pair]["h4"]["candles"]      = h4_raw
+            htf_cache[pair]["h4"]["fetched_hour"] = now_utc.hour
             print(f"  [{pair}] H4 cache updated — {len(h4_raw)} candles")
         else:
             print(f"  [{pair}] H4 fetch failed — using cached data")
-    else:
-        print(f"  [{pair}] H4 cache hit (fetched hour={pair_cache['h4']['fetched_hour']})")
+        if i < len(needs_refresh) - 1:
+            time.sleep(12)   # 12s gap keeps all 5 calls under 8 credits/min
 
-    return pair_cache["h1"]["candles"], pair_cache["h4"]["candles"]
+
+
 
 
 # ══════════════════════════════════════════════
@@ -764,10 +787,30 @@ def main():
         latest = candle_history[pair][-1]
         print(f"  {pair}: {len(candle_history[pair])} candles stored | Latest close: {latest['close']:.{DP[pair]}f}")
 
-    # ── [1b/3] Refresh HTF cache (H1 hourly, H4 at 4hr boundaries) ───────
-    print(f"\n[1b/3] Checking HTF cache (H1 on-hour | H4 at {sorted(H4_HOURS)})...")
-    for pair in STRATEGY_PAIRS:
-        get_htf_candles_for_pair(pair, htf_cache, now_utc)
+    # ── [1b/3] Refresh HTF cache ───────────────────────────────────────────
+    # H1 fetches on the hour, H4 at boundary hours (00,04,08,12,16,20).
+    # Each pass uses 12s between calls (5 calls x 12s = 60s) so all 5
+    # fetches stay under 8 credits/min with no extra waiting needed.
+    h1_needed = any(
+        should_refresh_h1(now_utc, htf_cache.get(p, {}).get("h1", {"fetched_hour": -1}))
+        for p in STRATEGY_PAIRS
+    )
+    h4_needed = now_utc.hour in H4_HOURS and any(
+        should_refresh_h4(now_utc, htf_cache.get(p, {}).get("h4", {"fetched_hour": -1}))
+        for p in STRATEGY_PAIRS
+    )
+
+    if h1_needed or h4_needed:
+        print(f"\n[1b/3] HTF refresh needed -- H1={h1_needed} H4={h4_needed}")
+        if h1_needed:
+            print(f"\n  [H1 pass] Fetching H1 candles...")
+            refresh_h1_cache(htf_cache, now_utc)
+
+        if h4_needed:
+            print(f"\n  [H4 pass] Fetching H4 candles (boundary hour={now_utc.hour})...")
+            refresh_h4_cache(htf_cache, now_utc)
+    else:
+        print(f"\n[1b/3] HTF cache OK -- all pairs current, no fetches needed")
 
     # ── [2/3] Run B&R signal scan ─────────────────────────────────────────
     print("\n[2/3] Running signal scan...")
