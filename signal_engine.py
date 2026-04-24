@@ -658,13 +658,24 @@ def is_duplicate(signal, fired_signals):
 # ══════════════════════════════════════════════
 #  10. SWEEP+FVG HELPERS
 # ══════════════════════════════════════════════
-def prepare_candles_for_sweep_fvg(raw_candles: list) -> list:
-    """Convert signal_engine candle format → sweep_fvg format (datetime objects)."""
+def prepare_candles_for_sweep_fvg(raw_candles: list, now_utc: datetime = None) -> list:
+    """
+    Convert signal_engine candle format -> sweep_fvg format (datetime objects).
+    Filters out any candle whose timestamp is ahead of now_utc -- these are
+    stale future-dated candles carried over in state from earlier runs and
+    would produce sweep signals with impossible future timestamps.
+    """
+    now = now_utc or datetime.now(timezone.utc)
     prepared = []
+    skipped  = 0
     for c in raw_candles:
         try:
+            candle_time = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            if candle_time > now:
+                skipped += 1
+                continue
             prepared.append({
-                "time":   datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc),
+                "time":   candle_time,
                 "open":   float(c["open"]),
                 "high":   float(c["high"]),
                 "low":    float(c["low"]),
@@ -674,6 +685,8 @@ def prepare_candles_for_sweep_fvg(raw_candles: list) -> list:
         except Exception as e:
             print(f"  [SWEEP] Candle prep error: {e}")
             continue
+    if skipped:
+        print(f"  [SWEEP] Filtered {skipped} future-dated candle(s) from history")
     return prepared
 
 
@@ -851,7 +864,7 @@ def main():
                 print(f"  [{pair}] No M15 history — skipping Sweep+FVG")
                 continue
 
-            m15_prepared = prepare_candles_for_sweep_fvg(candle_history[pair])
+            m15_prepared = prepare_candles_for_sweep_fvg(candle_history[pair], now_utc)
             if len(m15_prepared) < 100:
                 print(f"  [{pair}] Not enough M15 candles ({len(m15_prepared)}) — need 100 minimum")
                 continue
@@ -860,8 +873,8 @@ def main():
             h1_raw, h4_raw = htf_cache.get(pair, {}).get("h1", {}).get("candles", []), \
                              htf_cache.get(pair, {}).get("h4", {}).get("candles", [])
 
-            h1_prepared = prepare_candles_for_sweep_fvg(h1_raw) if h1_raw else []
-            h4_prepared = prepare_candles_for_sweep_fvg(h4_raw) if h4_raw else []
+            h1_prepared = prepare_candles_for_sweep_fvg(h1_raw, now_utc) if h1_raw else []
+            h4_prepared = prepare_candles_for_sweep_fvg(h4_raw, now_utc) if h4_raw else []
 
             print(f"  [{pair}] Sweep+FVG scan | M15={len(m15_prepared)} H1={len(h1_prepared)} H4={len(h4_prepared)}")
 
@@ -924,3 +937,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
