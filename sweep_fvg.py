@@ -672,7 +672,7 @@ def scan(m15_candles: list[dict],
                 'lv_source':  lv['source'],
                 'h1_bias':    h1_bias,
                 'tp_source':  tp_source,
-                'sweep_time': str(candle['time']),
+                'sweep_time': candle['time'].strftime('%Y-%m-%d %H:%M UTC'),
                 'fired_at':   str(latest_time),
             }
 
@@ -726,3 +726,4 @@ if __name__ == '__main__':
         print(f"  {r['direction'].upper():5} {r['pair']} | entry={r['entry']} sl={r['sl']} "
               f"tp={r['tp']} rr=1:{r['rr']} | {r['lv_source']} | {r['session']} "
               f"| H1={r['h1_bias']} | TP={r['tp_source']}")
+      
