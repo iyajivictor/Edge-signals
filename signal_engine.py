@@ -711,23 +711,34 @@ def send_telegram_sweep_fvg(signal: dict):
 
 
 def log_sweep_fvg_signal(signal: dict):
-    """Append Sweep+FVG signal to its own CSV log."""
+    """Append Sweep+FVG signal to its own CSV log.
+
+    Header (auto-filled columns only — outcome/pnl_pips/notes are manual):
+    fired_at | pair | direction | entry | sl | tp | rr | session |
+    lv_source | tp_source | sweep_time
+    """
     SWEEP_FVG_LOG.parent.mkdir(exist_ok=True)
     write_header = not SWEEP_FVG_LOG.exists()
     with open(SWEEP_FVG_LOG, "a") as f:
         if write_header:
-            f.write("fired_at,pair,direction,entry,sl,tp,rr,session,h1_bias,tp_source,lv_source,sweep_time\n")
+            f.write("fired_at,pair,direction,entry,sl,tp,rr,session,lv_source,tp_source,sweep_time\n")
         f.write(
             f"{signal['fired_at']},{signal['pair']},{signal['direction']},"
             f"{signal['entry']},{signal['sl']},{signal['tp']},"
             f"{signal['rr']},{signal['session']},"
-            f"{signal.get('h1_bias','')},{signal.get('tp_source','')},"
-            f"{signal['lv_source']},{signal['sweep_time']}\n"
+            f"{signal['lv_source']},{signal.get('tp_source','')},"
+            f"{signal['sweep_time']}\n"
         )
 
 
 def log_sweep_fvg_to_sheet(signal: dict):
-    """Log Sweep+FVG signal to Google Sheets (SweepFVG tab)."""
+    """Log Sweep+FVG signal to Google Sheets (SweepFVG tab).
+
+    Columns written (must match SweepFVG tab header exactly):
+    fired_at | pair | direction | entry | sl | tp | rr | session |
+    lv_source | tp_source | sweep_time | outcome | pnl_pips | notes
+    outcome/pnl_pips/notes pre-filled as empty strings for manual entry.
+    """
     try:
         raw        = os.environ.get("GOOGLE_CREDENTIALS", "")
         creds_dict = json.loads(raw)
@@ -753,12 +764,17 @@ def log_sweep_fvg_to_sheet(signal: dict):
             signal["fired_at"],
             signal["pair"],
             signal["direction"].upper(),
-            signal["entry"], signal["sl"], signal["tp"], signal["rr"],
+            signal["entry"],
+            signal["sl"],
+            signal["tp"],
+            signal["rr"],
             signal["session"],
-            signal.get("h1_bias", ""),
-            signal.get("tp_source", ""),
             signal["lv_source"],
-            "PENDING", "", "",
+            signal.get("tp_source", ""),
+            signal["sweep_time"],
+            "",   # outcome   — manual
+            "",   # pnl_pips  — manual
+            "",   # notes     — manual
         ]
         print(f"  [SWEEP] Writing row: {row}")
         sheet.append_row(row)
@@ -937,4 +953,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
