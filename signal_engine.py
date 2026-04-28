@@ -1,16 +1,34 @@
 """
 EDGE Signal Engine
 ==================
-Break & Retest signal detector for:
-  USDJPY (primary), GBPUSD, AUDJPY, XAUUSD, EURUSD — active B&R strategy
+Three-strategy signal detector:
 
-  M15 timeframe | 1:2 RR (XAUUSD 1:3) | Trend-filtered
+  1. Break & Retest (B&R)
+     Pairs: USDJPY, GBPUSD, AUDJPY, XAUUSD, EURUSD
+     M15 timeframe | 1:2 RR (XAUUSD 1:3) | Trend-filtered
+
+  2. Sweep + FVG
+     Pairs: all 5 strategy pairs
+     M15 entry | H1 TP targets | Session-filtered
+     Sources: PDH, AsianH, NewYorkH | RR 1:3–1:5
+
+  3. Prop Firm — London Open Liquidity Grab (LOLG)
+     Pairs: EURUSD, GBPUSD only
+     H1 Asian range | M15 sweep detection | 07:00–09:00 UTC
+     RR 1:1.5–1:3 | Risk 0.5% | Max 2 trades/day
+     Telegram label: 🏆 PROP | Logged to PropFirm Sheets tab
 
 Runs every 15 minutes via GitHub Actions + cron-job.org
 Sends Telegram alerts when a signal fires.
-Logs all signals to state/signals_log.csv
+Logs all signals to state/ CSV files and Google Sheets.
 
 Changes vs previous version:
+  - prop_engine.py integrated as [2c/3] scan step
+  - PROP_PAIRS constant added (EURUSD, GBPUSD)
+  - PROP_LOG path added (state/prop_log.csv)
+  - send_telegram_prop(), log_prop_signal(), log_prop_to_sheet() added
+  - Summary block now shows Prop signals count
+  - SweepFVG sheet logger: h1_bias removed, sweep_time added, outcome pre-filled empty
   - TREND_N reverted 2 → 3 (stricter trend confirmation)
   - SWING_MIN_DIST added: minimum pip distance between swing points
   - SL placement uses swing close + 0.25x ATR14 buffer (not wicks)
@@ -43,6 +61,14 @@ try:
 except ImportError:
     print("[WARN] sweep_fvg.py not found — Sweep+FVG strategy disabled")
     SWEEP_FVG_ENABLED = False
+
+# ── Prop Firm strategy module ──
+try:
+    from prop_engine import scan as prop_scan
+    PROP_ENABLED = True
+except ImportError:
+    print("[WARN] prop_engine.py not found — Prop Firm strategy disabled")
+    PROP_ENABLED = False
 
 # ══════════════════════════════════════════════
 #  CONFIG
@@ -108,6 +134,10 @@ STATE_FILE        = Path("state/price_history.json")
 LIVE_SIGNALS_FILE = Path("state/live_signals.json")
 SIGNALS_LOG       = Path("state/signals_log.csv")
 SWEEP_FVG_LOG     = Path("state/sweep_fvg_log.csv")
+PROP_LOG          = Path("state/prop_log.csv")
+
+# Prop firm pairs — London Open Liquidity Grab runs on these only
+PROP_PAIRS = ["EURUSD", "GBPUSD"]
 
 # HTF candle counts to fetch when cache is stale
 H1_FETCH_SIZE = 50   # ~50 hours of H1
@@ -782,6 +812,107 @@ def log_sweep_fvg_to_sheet(signal: dict):
     except Exception as e:
         print(f"  [SWEEP] ✗ Sheet log error: {e}")
 
+
+# ══════════════════════════════════════════════
+#  11. PROP FIRM HELPERS
+# ══════════════════════════════════════════════
+def send_telegram_prop(signal: dict):
+    """Send Telegram alert for a Prop Firm signal (🏆 PROP label)."""
+    if not TG_TOKEN or not TG_CHAT_ID:
+        print("  [PROP] Telegram not configured — skipping")
+        return
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    try:
+        res = requests.post(url, json={
+            "chat_id":    TG_CHAT_ID,
+            "text":       signal["message"],
+            "parse_mode": "Markdown",
+        }, timeout=10)
+        if res.json().get("ok"):
+            print(f"  [PROP] ✓ Telegram sent — {signal['side']} {signal['pair']}")
+        else:
+            print(f"  [PROP] ✗ Telegram failed: {res.json()}")
+    except Exception as e:
+        print(f"  [PROP] ✗ Telegram error: {e}")
+
+
+def log_prop_signal(signal: dict):
+    """Append Prop Firm signal to prop_log.csv.
+
+    Header (auto-filled — outcome/pnl_pips/notes are manual):
+    fired_at | pair | direction | entry | sl | tp | rr | sl_pips |
+    asian_high | asian_low | sweep_src | sweep_type | risk_pct | session
+    """
+    PROP_LOG.parent.mkdir(exist_ok=True)
+    write_header = not PROP_LOG.exists()
+    with open(PROP_LOG, "a") as f:
+        if write_header:
+            f.write(
+                "fired_at,pair,direction,entry,sl,tp,rr,sl_pips,"
+                "asian_high,asian_low,sweep_src,sweep_type,risk_pct,session\n"
+            )
+        f.write(
+            f"{signal['fired_at']},{signal['pair']},{signal['direction']},"
+            f"{signal['entry']},{signal['sl']},{signal['tp']},"
+            f"{signal['rr']},{signal['sl_pips']},"
+            f"{signal['asian_high']},{signal['asian_low']},"
+            f"{signal['sweep_src']},{signal['sweep_type']},"
+            f"{signal['risk_pct']},{signal['session']}\n"
+        )
+
+
+def log_prop_to_sheet(signal: dict):
+    """Log Prop Firm signal to Google Sheets (PropFirm tab).
+
+    Columns written (must match PropFirm tab header exactly):
+    fired_at | pair | direction | entry | sl | tp | rr |
+    asian_high | asian_low | sweep_src | session |
+    outcome | pnl_pips | notes
+    outcome/pnl_pips/notes pre-filled empty for manual entry.
+    """
+    try:
+        raw        = os.environ.get("GOOGLE_CREDENTIALS", "")
+        creds_dict = json.loads(raw)
+        creds      = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        client   = gspread.authorize(creds)
+        workbook = client.open_by_key(os.environ.get("SHEET_ID", ""))
+
+        all_tabs = [ws.title for ws in workbook.worksheets()]
+        print(f"  [PROP] Available tabs: {all_tabs}")
+
+        try:
+            sheet = workbook.worksheet("PropFirm")
+            print(f"  [PROP] Found PropFirm tab ✓")
+        except Exception as tab_err:
+            print(f"  [PROP] ✗ PropFirm tab not found: {tab_err}")
+            print(f"  [PROP] Available tabs were: {all_tabs}")
+            return
+
+        row = [
+            signal["fired_at"],
+            signal["pair"],
+            signal["direction"].upper(),
+            signal["entry"],
+            signal["sl"],
+            signal["tp"],
+            signal["rr"],
+            signal["asian_high"],
+            signal["asian_low"],
+            signal["sweep_src"],
+            signal["session"],
+            "",   # outcome   — manual
+            "",   # pnl_pips  — manual
+            "",   # notes     — manual
+        ]
+        print(f"  [PROP] Writing row: {row}")
+        sheet.append_row(row)
+        print(f"  [PROP] ✓ PropFirm sheet logged")
+    except Exception as e:
+        print(f"  [PROP] ✗ Sheet log error: {e}")
+
 # ══════════════════════════════════════════════
 #  11. MAIN
 # ══════════════════════════════════════════════
@@ -907,6 +1038,40 @@ def main():
             else:
                 print(f"  [{pair}] No Sweep+FVG signals this run")
 
+    # ── [2c/3] Prop Firm scan — EURUSD + GBPUSD only ─────────────────────
+    prop_signals = []
+    if PROP_ENABLED:
+        print(f"\n[2c/3] Running Prop Firm scan (EURUSD, GBPUSD)...")
+        for pair in PROP_PAIRS:
+            if pair not in candle_history or not candle_history[pair]:
+                print(f"  [{pair}] No M15 history — skipping Prop scan")
+                continue
+
+            m15_prepared = prepare_candles_for_sweep_fvg(candle_history[pair], now_utc)
+            if len(m15_prepared) < 50:
+                print(f"  [{pair}] Not enough M15 candles ({len(m15_prepared)}) — need 50 minimum")
+                continue
+
+            # H1 from existing HTF cache — no extra API calls
+            h1_raw      = htf_cache.get(pair, {}).get("h1", {}).get("candles", [])
+            h1_prepared = prepare_candles_for_sweep_fvg(h1_raw, now_utc) if h1_raw else []
+
+            print(f"  [{pair}] Prop scan | M15={len(m15_prepared)} H1={len(h1_prepared)}")
+
+            pair_prop_signals = prop_scan(
+                m15_candles=m15_prepared,
+                h1_candles=h1_prepared if h1_prepared else None,
+                pair=pair,
+            )
+
+            if pair_prop_signals:
+                print(f"  [{pair}] 🏆 {len(pair_prop_signals)} Prop signal(s) found")
+                prop_signals.extend(pair_prop_signals)
+            else:
+                print(f"  [{pair}] No Prop signals this run")
+    else:
+        prop_signals = []
+
     # ── [3/3] Send alerts ─────────────────────────────────────────────────
     print(f"\n[3/3] Sending alerts...")
 
@@ -929,6 +1094,16 @@ def main():
     else:
         print("  No new Sweep+FVG signals this run")
 
+    # Prop Firm alerts
+    if prop_signals:
+        for sig in prop_signals:
+            send_telegram_prop(sig)
+            log_prop_signal(sig)
+            log_prop_to_sheet(sig)
+            print(f"  ✓ 🏆 {sig['side']} {sig['pair']} prop signal logged")
+    else:
+        print("  No new Prop signals this run")
+
     # ── Persist state ──────────────────────────────────────────────────────
     state["candle_history"] = candle_history
     state["active_setups"]  = active_setups
@@ -943,6 +1118,7 @@ def main():
     print(f"  Live signals:      {list(load_live_signals().keys())}")
     print(f"  B&R signals:       {len(signals_fired)}")
     print(f"  Sweep+FVG signals: {len(sweep_signals)}")
+    print(f"  Prop signals:      {len(prop_signals)}")
     total = sum(len(v) for v in candle_history.values())
     print(f"  Total candles:     {total}")
     h1_cached = sum(1 for p in STRATEGY_PAIRS if htf_cache.get(p, {}).get("h1", {}).get("candles"))
