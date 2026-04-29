@@ -6,6 +6,14 @@ Runs as a standalone module called from signal_engine.py alongside the
 existing Break & Retest engine. Completely isolated — shares no state
 files with B&R.
 
+Changelog v4 (staleness + dedup + outcome tracking):
+  - SWEEP_MAX_AGE_M15 = 8: sweeps older than 8 candles (~2 hrs) are ignored
+  - dedup_key now includes sweep candle timestamp — prevents re-fire even if
+    sweep_fvg_fired.json fails to persist across GitHub Actions runs
+  - sweep_time and fired_at now formatted as 'YYYY-MM-DD HH:MM UTC' (matches B&R)
+  - SWEEP_LIVE_FILE added: confirmed signals written to state/sweep_fvg_live.json
+    for outcome resolution by signal_engine.py resolve_sweep_fvg_outcomes()
+
 Changelog v3 (post-backtest filter pass):
   - Equal H/L removed as sweep source (largest loss driver across all 5 pairs)
   - Valid sweep sources: PDH, AsianH, NewYorkH only
@@ -56,11 +64,12 @@ H1_SWING_N   = 2     # H1 swing confirmation candles each side
 MIN_FVG_PIPS = 2     # minimum FVG gap size in pips
 MIN_RR       = 3.0   # minimum RR — signals below this are dropped
 MAX_RR       = 5.0   # maximum RR — signals beyond this are dropped (no fallback)
-LOOKBACK     = 50    # M15 candles before external levels expire
-FVG_WINDOW   = 10    # candles before sweep to search for matching FVG
-RETRACE_WIN  = 30    # candles after sweep to wait for FVG retrace
-FVG_MAX_AGE  = 10    # FVG expires after N candles with no retrace
-H1_LOOKBACK  = 30    # H1 candles used for TP target pool
+LOOKBACK          = 50    # M15 candles before external levels expire
+FVG_WINDOW        = 10    # candles before sweep to search for matching FVG
+RETRACE_WIN       = 30    # candles after sweep to wait for FVG retrace
+FVG_MAX_AGE       = 10    # FVG expires after N candles with no retrace
+H1_LOOKBACK       = 30    # H1 candles used for TP target pool
+SWEEP_MAX_AGE_M15 = 8     # max candles ago a sweep candle can be (~2 hours on M15)
 
 # ── VALID SWEEP SOURCES ────────────────────────────────────────────────────
 # equal_hl removed — negative P&L across all 5 pairs in backtest.
@@ -101,6 +110,7 @@ XAUUSD_CONFIG = {
 # ── STATE FILES — isolated from B&R engine ────────────────────────────────
 STATE_FILE         = 'state/sweep_fvg_state.json'
 FIRED_SIGNALS_FILE = 'state/sweep_fvg_fired.json'
+SWEEP_LIVE_FILE    = 'state/sweep_fvg_live.json'   # active signals awaiting outcome
 SIGNAL_TTL_HOURS   = 4
 
 
@@ -315,6 +325,25 @@ def save_fired_signals(fired: dict):
         json.dump(fired, f, indent=2)
 
 
+# ── SWEEP LIVE SIGNAL STATE (for outcome tracking) ────────────────────────
+def load_sweep_live() -> dict:
+    """Load active SweepFVG signals waiting for outcome resolution."""
+    if os.path.exists(SWEEP_LIVE_FILE):
+        try:
+            with open(SWEEP_LIVE_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_sweep_live(live: dict):
+    """Persist active SweepFVG signals to state file."""
+    os.makedirs(os.path.dirname(SWEEP_LIVE_FILE), exist_ok=True)
+    with open(SWEEP_LIVE_FILE, 'w') as f:
+        json.dump(live, f, indent=2)
+
+
 def is_already_fired(dedup_key: str, fired: dict) -> bool:
     if dedup_key not in fired:
         return False
@@ -469,7 +498,11 @@ def scan(m15_candles: list[dict],
         # but every setup will hit the tp=None guard below and be dropped.
 
     # ── Scan for setups ───────────────────────────────────────────────────
-    scan_start = max(SWING_N, n - FVG_WINDOW - RETRACE_WIN - 5)
+    # Only scan recent candles: SWEEP_MAX_AGE_M15 back from the latest candle.
+    # This prevents stale sweeps (e.g. 00:00 sweep firing at 08:00) from
+    # generating alerts hours after the setup was valid.
+    recency_limit = max(SWING_N, n - SWEEP_MAX_AGE_M15 - RETRACE_WIN - FVG_WINDOW)
+    scan_start    = recency_limit
 
     for i in range(scan_start, n - 1):
         candle  = m15_candles[i]
@@ -598,7 +631,11 @@ def scan(m15_candles: list[dict],
                 continue
 
             # ── Persistent dedup ──────────────────────────────────────────
-            dedup_key = f"{pair}_{direction}_{fvg_mid}_{sl_val}"
+            # Key includes sweep candle time so identical setups from different
+            # sweeps are distinct, and the same sweep cannot re-fire across
+            # runs even if sweep_fvg_fired.json fails to persist correctly.
+            sweep_ts  = candle['time'].strftime('%Y%m%d%H%M')
+            dedup_key = f"{pair}_{direction}_{fvg_mid}_{sl_val}_{sweep_ts}"
             if is_already_fired(dedup_key, fired):
                 logger.info(f"sweep_fvg [{pair}]: Duplicate suppressed — {dedup_key}")
                 continue
@@ -615,13 +652,28 @@ def scan(m15_candles: list[dict],
                 'session':    current_session,
                 'lv_source':  lv['source'],
                 'tp_source':  tp_source,
-                'sweep_time': str(candle['time']),
-                'fired_at':   str(latest_time),
+                'sweep_time': candle['time'].strftime('%Y-%m-%d %H:%M UTC'),
+                'fired_at':   latest_time.strftime('%Y-%m-%d %H:%M UTC'),
                 'h1_bias':    '',   # reserved for future H4 bias filter
             }
 
             signal = format_signal(setup)
             signals_fired.append(signal)
+
+            # ── Write to live state for outcome tracking ──────────────────
+            live_state = load_sweep_live()
+            live_key   = f"{pair}_{sweep_ts}"
+            live_state[live_key] = {
+                'pair':      pair,
+                'direction': direction,
+                'side':      'SELL' if direction == 'short' else 'BUY',
+                'entry':     fvg_mid,
+                'sl':        sl_val,
+                'tp':        tp,
+                'fired_at':  latest_time.strftime('%Y-%m-%d %H:%M UTC'),
+                'outcome':   '',
+            }
+            save_sweep_live(live_state)
 
             logger.info(
                 f"sweep_fvg [{pair}]: ✅ Signal | {direction.upper()} "
@@ -662,3 +714,4 @@ if __name__ == '__main__':
             f"tp={r['tp']} rr=1:{r['rr']} | sweep={r['lv_source']} "
             f"tp_src={r['tp_source']} | {r['session']}"
         )
+
