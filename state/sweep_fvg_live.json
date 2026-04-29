@@ -1,0 +1,12 @@
+{
+  "USDJPY_202604290000": {
+    "pair": "USDJPY",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 159.5685,
+    "sl": 159.62905,
+    "tp": 159.31456,
+    "fired_at": "2026-04-29 08:00 UTC",
+    "outcome": ""
+  }
+}
