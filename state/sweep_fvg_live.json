@@ -8,5 +8,15 @@
     "tp": 1.16873,
     "fired_at": "2026-04-29 11:15 UTC",
     "outcome": ""
+  },
+  "AUDJPY_202604291130": {
+    "pair": "AUDJPY",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 114.54202,
+    "sl": 114.63815,
+    "tp": 114.22151,
+    "fired_at": "2026-04-29 11:45 UTC",
+    "outcome": ""
   }
 }
