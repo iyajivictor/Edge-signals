@@ -1,0 +1,14 @@
+{
+  "EURUSD_2026-04-29": {
+    "date": "2026-04-29",
+    "trades": 0,
+    "daily_loss": 0.0,
+    "lolg_fired": false
+  },
+  "GBPUSD_2026-04-29": {
+    "date": "2026-04-29",
+    "trades": 0,
+    "daily_loss": 0.0,
+    "lolg_fired": false
+  }
+}
