@@ -1,1 +1,12 @@
-{}
+{
+  "EURUSD_202604291100": {
+    "pair": "EURUSD",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 1.17137,
+    "sl": 1.1719,
+    "tp": 1.16873,
+    "fired_at": "2026-04-29 11:15 UTC",
+    "outcome": ""
+  }
+}
