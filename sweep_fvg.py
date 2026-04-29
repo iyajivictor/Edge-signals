@@ -498,13 +498,15 @@ def scan(m15_candles: list[dict],
         # but every setup will hit the tp=None guard below and be dropped.
 
     # ── Scan for setups ───────────────────────────────────────────────────
-    # Only scan recent candles: SWEEP_MAX_AGE_M15 back from the latest candle.
-    # This prevents stale sweeps (e.g. 00:00 sweep firing at 08:00) from
-    # generating alerts hours after the setup was valid.
-    recency_limit = max(SWING_N, n - SWEEP_MAX_AGE_M15 - RETRACE_WIN - FVG_WINDOW)
-    scan_start    = recency_limit
+    # Use full lookback for the scan so retrace detection works correctly.
+    # Staleness is enforced per-candle inside the loop: if the sweep candle
+    # index is more than SWEEP_MAX_AGE_M15 candles before the latest, skip it.
+    scan_start = max(SWING_N, n - FVG_WINDOW - RETRACE_WIN - 5)
 
     for i in range(scan_start, n - 1):
+        # ── Staleness gate — drop sweeps older than SWEEP_MAX_AGE_M15 ────
+        if (n - 1) - i > SWEEP_MAX_AGE_M15:
+            continue
         candle  = m15_candles[i]
         session = get_session(candle['time'].hour)
         if not session:
