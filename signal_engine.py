@@ -914,6 +914,123 @@ def log_prop_to_sheet(signal: dict):
         print(f"  [PROP] ✗ Sheet log error: {e}")
 
 # ══════════════════════════════════════════════
+#  12. SWEEP+FVG OUTCOME TRACKER
+# ══════════════════════════════════════════════
+SWEEP_LIVE_FILE   = Path("state/sweep_fvg_live.json")
+SWEEP_FVG_RR_MAP  = {"default": 3.0, "XAUUSD": 3.0}   # matches sweep_fvg MIN_RR
+
+def load_sweep_live_signals():
+    if SWEEP_LIVE_FILE.exists():
+        try:
+            return json.loads(SWEEP_LIVE_FILE.read_text())
+        except Exception:
+            return {}
+    return {}
+
+def save_sweep_live_signals(live: dict):
+    SWEEP_LIVE_FILE.parent.mkdir(exist_ok=True)
+    SWEEP_LIVE_FILE.write_text(json.dumps(live, indent=2))
+
+def resolve_sweep_fvg_outcomes(candle_history: dict, now_utc: datetime):
+    """
+    Check every active SweepFVG signal against current price.
+    Resolves WIN (price reached TP) or LOSS (price reached SL).
+    Sends a Telegram result message and removes the signal from live state.
+    """
+    live = load_sweep_live_signals()
+    if not live:
+        return
+
+    resolved_keys = []
+    for key, sig in live.items():
+        pair      = sig.get('pair')
+        direction = sig.get('direction')
+        entry     = sig.get('entry')
+        sl        = sig.get('sl')
+        tp        = sig.get('tp')
+
+        if pair not in candle_history or not candle_history[pair]:
+            continue
+
+        current_price = candle_history[pair][-1]['close']
+        outcome       = None
+
+        if direction == 'short':
+            if current_price <= tp:
+                outcome = 'WIN'
+            elif current_price >= sl:
+                outcome = 'LOSS'
+        else:
+            if current_price >= tp:
+                outcome = 'WIN'
+            elif current_price <= sl:
+                outcome = 'LOSS'
+
+        if outcome:
+            resolved_keys.append(key)
+            _send_sweep_outcome_alert(sig, outcome, current_price, now_utc)
+            _update_sweep_sheet_outcome(sig, outcome, current_price)
+            print(f"  [SWEEP RESULT] {pair} {direction.upper()} → {outcome} | close={current_price}")
+
+    for key in resolved_keys:
+        live.pop(key, None)
+
+    save_sweep_live_signals(live)
+
+
+def _send_sweep_outcome_alert(sig: dict, outcome: str, close_price: float, now_utc: datetime):
+    """Telegram message for SweepFVG outcome — mirrors B&R result format."""
+    if not TG_TOKEN or not TG_CHAT_ID:
+        return
+    pair  = sig['pair']
+    emoji = '✅' if outcome == 'WIN' else '❌'
+    dp    = DP.get(pair, 5)
+    msg   = (
+        f"{emoji} *EDGE RESULT -- {sig['side']} {pair}*\n\n"
+        f"Outcome:  *{outcome}*\n"
+        f"Entry:     {sig['entry']:.{dp}f}\n"
+        f"Close:     {close_price:.{dp}f}\n"
+        f"RR:        1:{sig.get('rr', '?')}\n\n"
+        f"_Log updated automatically in EDGE Journal_"
+    )
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    try:
+        requests.post(url, json={
+            "chat_id": TG_CHAT_ID, "text": msg, "parse_mode": "Markdown"
+        }, timeout=10)
+    except Exception as e:
+        print(f"  [SWEEP RESULT] Telegram error: {e}")
+
+
+def _update_sweep_sheet_outcome(sig: dict, outcome: str, close_price: float):
+    """Find the signal row in the SweepFVG sheet and update its outcome column."""
+    try:
+        raw        = os.environ.get("GOOGLE_CREDENTIALS", "")
+        creds_dict = json.loads(raw)
+        creds      = Credentials.from_service_account_info(
+            creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        client   = gspread.authorize(creds)
+        workbook = client.open_by_key(os.environ.get("SHEET_ID", ""))
+        sheet    = workbook.worksheet("SweepFVG")
+
+        # Find the row by matching fired_at + pair + direction
+        all_rows = sheet.get_all_values()
+        for row_idx, row in enumerate(all_rows[1:], start=2):   # skip header
+            if (len(row) >= 3 and
+                    row[0] == sig.get('fired_at', '') and
+                    row[1] == sig.get('pair', '') and
+                    row[2].upper() == sig.get('direction', '').upper()):
+                # Column L = index 12 (1-based) = outcome
+                sheet.update_cell(row_idx, 12, outcome)
+                print(f"  [SWEEP RESULT] ✓ Sheet outcome updated row {row_idx}")
+                return
+        print(f"  [SWEEP RESULT] Row not found in sheet for {sig.get('pair')} {sig.get('fired_at')}")
+    except Exception as e:
+        print(f"  [SWEEP RESULT] ✗ Sheet update error: {e}")
+
+
+# ══════════════════════════════════════════════
 #  11. MAIN
 # ══════════════════════════════════════════════
 def main():
@@ -973,6 +1090,9 @@ def main():
         print(f"\n[1b/3] HTF cache OK -- all pairs current, no fetches needed")
 
     # ── [2/3] Run B&R signal scan ─────────────────────────────────────────
+    # First: resolve any pending SweepFVG outcomes against fresh prices
+    resolve_sweep_fvg_outcomes(candle_history, now_utc)
+
     print("\n[2/3] Running signal scan...")
     signals_fired = []
     live = load_live_signals()
