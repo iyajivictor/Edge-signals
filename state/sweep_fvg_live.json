@@ -1,1 +1,12 @@
-{}
+{
+  "AUDJPY_202604300800": {
+    "pair": "AUDJPY",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 114.13348,
+    "sl": 114.19443,
+    "tp": 113.93609,
+    "fired_at": "2026-04-30 09:15 UTC",
+    "outcome": ""
+  }
+}
