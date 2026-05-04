@@ -43,7 +43,7 @@
   },
   "GBPUSD_2026-05-04": {
     "date": "2026-05-04",
-    "trades": 0,
+    "trades": 1,
     "daily_loss": 0.0,
     "lolg_fired": false
   }

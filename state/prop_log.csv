@@ -1,0 +1,2 @@
+fired_at,pair,direction,entry,sl,tp,rr,sl_pips,asian_high,asian_low,sweep_src,sweep_type,risk_pct,session
+2026-05-04 08:00:00+00:00,GBPUSD,short,1.35914,1.3606,1.3565,1.81,14.6,1.35927,1.3565,PDH,PDH_Rejection,0.5,London
