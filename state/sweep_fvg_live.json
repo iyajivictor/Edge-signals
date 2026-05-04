@@ -1,12 +1,1 @@
-{
-  "GBPUSD_202605040800": {
-    "pair": "GBPUSD",
-    "direction": "short",
-    "side": "SELL",
-    "entry": 1.35957,
-    "sl": 1.3605,
-    "tp": 1.35676,
-    "fired_at": "2026-05-04 09:15 UTC",
-    "outcome": ""
-  }
-}
+{}
