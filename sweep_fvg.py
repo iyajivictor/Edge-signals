@@ -6,6 +6,14 @@ Runs as a standalone module called from signal_engine.py alongside the
 existing Break & Retest engine. Completely isolated — shares no state
 files with B&R.
 
+Changelog v5 (logic correction — FVG now sourced post-sweep):
+  - FVG search now looks FORWARD from sweep candle (was backward)
+  - Only bearish FVG valid after BSL sweep — imbalance created by fast
+    post-sweep drop, not a pre-existing gap (aligns with ICT/SMC doctrine)
+  - RETRACE_WIN tightened from 30 → 10 candles (~2.5 hrs on M15)
+  - FVG_WINDOW comment updated to reflect forward search direction
+  - Price/position guards on old forward search removed (no longer needed)
+
 Changelog v4 (staleness + dedup + outcome tracking):
   - SWEEP_MAX_AGE_M15 = 8: sweeps older than 8 candles (~2 hrs) are ignored
   - dedup_key now includes sweep candle timestamp — prevents re-fire even if
@@ -65,8 +73,8 @@ MIN_FVG_PIPS = 2     # minimum FVG gap size in pips
 MIN_RR       = 3.0   # minimum RR — signals below this are dropped
 MAX_RR       = 5.0   # maximum RR — signals beyond this are dropped (no fallback)
 LOOKBACK          = 50    # M15 candles before external levels expire
-FVG_WINDOW        = 10    # candles before sweep to search for matching FVG
-RETRACE_WIN       = 30    # candles after sweep to wait for FVG retrace
+FVG_WINDOW        = 10    # candles after sweep to search for matching FVG
+RETRACE_WIN       = 10    # candles after FVG forms to wait for retrace (tightened from 30)
 FVG_MAX_AGE       = 10    # FVG expires after N candles with no retrace
 H1_LOOKBACK       = 30    # H1 candles used for TP target pool
 SWEEP_MAX_AGE_M15 = 8     # max candles ago a sweep candle can be (~2 hours on M15)
@@ -526,16 +534,18 @@ def scan(m15_candles: list[dict],
             direction       = 'short' if side == 'BSL' else 'long'
             target_fvg_type = 'bullish' if direction == 'short' else 'bearish'
 
-            # ── Find matching FVG near sweep ──────────────────────────────
-            sweep_fvg    = None
-            search_start = max(SWING_N, i - FVG_WINDOW)
-            for j in range(search_start, i + 2):
+            # ── Find matching FVG formed AFTER the sweep ──────────────────
+            # Post-sweep price moves fast, creating an imbalance (FVG).
+            # For BSL sweeps (short): look for bearish FVG in candles
+            # immediately following the sweep — the gap left by the
+            # aggressive drop after liquidity was grabbed above the level.
+            # Search forward up to FVG_WINDOW candles from sweep candle.
+            sweep_fvg  = None
+            search_end = min(n, i + FVG_WINDOW + 1)
+            for j in range(i + 1, search_end):
                 for fvg in fvg_index.get(j, []):
                     if fvg['type'] == target_fvg_type:
-                        if direction == 'short' and fvg['top'] <= candle['high']:
-                            sweep_fvg = fvg; break
-                        if direction == 'long'  and fvg['bottom'] >= candle['low']:
-                            sweep_fvg = fvg; break
+                        sweep_fvg = fvg; break
                 if sweep_fvg:
                     break
 
@@ -716,4 +726,5 @@ if __name__ == '__main__':
             f"tp={r['tp']} rr=1:{r['rr']} | sweep={r['lv_source']} "
             f"tp_src={r['tp_source']} | {r['session']}"
         )
+
 
