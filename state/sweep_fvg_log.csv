@@ -9,3 +9,4 @@ fired_at,direction,entry,sl,tp,rr,session,lv_source,sweep_time
 2026-05-04 08:15 UTC,EURUSD,short,1.17389,1.17453,1.17192,3.08,London,AsianH,H1_swing_low,2026-05-04 08:00 UTC
 2026-05-04 09:15 UTC,GBPUSD,short,1.35957,1.3605,1.35676,3.02,London,PDH,H1_swing_low,2026-05-04 08:00 UTC
 2026-05-05 07:45 UTC,GBPUSD,short,1.35354,1.3542,1.35135,3.32,London,PDH,H1_swing_low,2026-05-05 05:45 UTC
+2026-05-05 10:30 UTC,GBPUSD,short,1.35283,1.35329,1.35135,3.22,London,NewYorkH,H1_swing_low,2026-05-05 08:45 UTC
