@@ -46,5 +46,17 @@
     "trades": 1,
     "daily_loss": 0.0,
     "lolg_fired": false
+  },
+  "EURUSD_2026-05-05": {
+    "date": "2026-05-05",
+    "trades": 0,
+    "daily_loss": 0.0,
+    "lolg_fired": false
+  },
+  "GBPUSD_2026-05-05": {
+    "date": "2026-05-05",
+    "trades": 0,
+    "daily_loss": 0.0,
+    "lolg_fired": false
   }
 }
