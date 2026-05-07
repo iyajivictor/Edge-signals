@@ -1,12 +1,22 @@
 {
-  "XAUUSD_202605070845": {
+  "USDJPY_202605071000": {
+    "pair": "USDJPY",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 156.37478,
+    "sl": 156.54555,
+    "tp": 155.62756,
+    "fired_at": "2026-05-07 11:00 UTC",
+    "outcome": ""
+  },
+  "XAUUSD_202605070900": {
     "pair": "XAUUSD",
     "direction": "short",
     "side": "SELL",
     "entry": 4692.69421,
-    "sl": 4700.53375,
+    "sl": 4700.65454,
     "tp": 4664.1791,
-    "fired_at": "2026-05-07 10:45 UTC",
+    "fired_at": "2026-05-07 11:00 UTC",
     "outcome": ""
   }
 }
