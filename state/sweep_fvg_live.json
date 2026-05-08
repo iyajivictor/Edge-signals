@@ -14,9 +14,9 @@
     "direction": "short",
     "side": "SELL",
     "entry": 4707.51436,
-    "sl": 4712.65534,
+    "sl": 4712.54494,
     "tp": 4691.52444,
-    "fired_at": "2026-05-08 07:30 UTC",
+    "fired_at": "2026-05-08 07:45 UTC",
     "outcome": ""
   }
 }
