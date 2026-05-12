@@ -119,7 +119,7 @@ XAUUSD_CONFIG = {
 STATE_FILE         = 'state/sweep_fvg_state.json'
 FIRED_SIGNALS_FILE = 'state/sweep_fvg_fired.json'
 SWEEP_LIVE_FILE    = 'state/sweep_fvg_live.json'   # active signals awaiting outcome
-SIGNAL_TTL_HOURS   = 4
+SIGNAL_TTL_HOURS   = 10   # covers full London session + buffer (was 4h — too short)
 
 
 # ── SESSION HELPERS ────────────────────────────────────────────────────────
@@ -643,15 +643,31 @@ def scan(m15_candles: list[dict],
                 continue
 
             # ── Persistent dedup ──────────────────────────────────────────
-            # Key includes sweep candle time so identical setups from different
-            # sweeps are distinct, and the same sweep cannot re-fire across
-            # runs even if sweep_fvg_fired.json fails to persist correctly.
+            # TWO keys checked:
+            #
+            # 1. level_key — locks the liquidity level itself for the session.
+            #    Prevents re-fire when a second candle also wicks above the same
+            #    level within SWEEP_MAX_AGE_M15, or when ATR shifts slightly on
+            #    XAUUSD causing sl_val to change across cron runs.
+            #    Format: pair_source_levelPrice — no sl_val, no sweep_ts.
+            #
+            # 2. setup_key — locks the specific FVG entry computed from this sweep.
+            #    Includes sweep_ts + fvg_mid so genuinely different sweeps of the
+            #    same level on different days are still allowed.
             sweep_ts  = candle['time'].strftime('%Y%m%d%H%M')
-            dedup_key = f"{pair}_{direction}_{fvg_mid}_{sl_val}_{sweep_ts}"
-            if is_already_fired(dedup_key, fired):
-                logger.info(f"sweep_fvg [{pair}]: Duplicate suppressed — {dedup_key}")
+            lv_price_str = f"{lv['price']:.5f}"
+            level_key = f"LVL_{pair}_{lv['source']}_{lv_price_str}"
+            setup_key = f"{pair}_{direction}_{fvg_mid}_{sweep_ts}"
+
+            if is_already_fired(level_key, fired):
+                logger.info(f"sweep_fvg [{pair}]: Level already consumed — {level_key}")
                 continue
-            mark_as_fired(dedup_key, fired)
+            if is_already_fired(setup_key, fired):
+                logger.info(f"sweep_fvg [{pair}]: Setup duplicate suppressed — {setup_key}")
+                continue
+
+            mark_as_fired(level_key, fired)
+            mark_as_fired(setup_key, fired)
 
             # ── Signal confirmed ──────────────────────────────────────────
             setup = {
@@ -726,5 +742,6 @@ if __name__ == '__main__':
             f"tp={r['tp']} rr=1:{r['rr']} | sweep={r['lv_source']} "
             f"tp_src={r['tp_source']} | {r['session']}"
         )
+
 
 
