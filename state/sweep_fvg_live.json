@@ -18,15 +18,5 @@
     "tp": 113.51749,
     "fired_at": "2026-05-12 10:30 UTC",
     "outcome": ""
-  },
-  "XAUUSD_202605121015": {
-    "pair": "XAUUSD",
-    "direction": "short",
-    "side": "SELL",
-    "entry": 4756.73064,
-    "sl": 4776.07341,
-    "tp": 4674.95028,
-    "fired_at": "2026-05-12 11:45 UTC",
-    "outcome": ""
   }
 }
