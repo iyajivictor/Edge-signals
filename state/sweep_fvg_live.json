@@ -24,19 +24,19 @@
     "direction": "short",
     "side": "SELL",
     "entry": 4756.73064,
-    "sl": 4775.60944,
+    "sl": 4775.8713,
     "tp": 4674.95028,
-    "fired_at": "2026-05-12 11:00 UTC",
+    "fired_at": "2026-05-12 11:15 UTC",
     "outcome": ""
   },
-  "EURUSD_202605121045": {
+  "EURUSD_202605121100": {
     "pair": "EURUSD",
     "direction": "short",
     "side": "SELL",
-    "entry": 1.17707,
-    "sl": 1.17756,
+    "entry": 1.17667,
+    "sl": 1.17712,
     "tp": 1.17492,
-    "fired_at": "2026-05-12 11:00 UTC",
+    "fired_at": "2026-05-12 11:15 UTC",
     "outcome": ""
   }
 }
