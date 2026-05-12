@@ -29,3 +29,4 @@ fired_at,direction,entry,sl,tp,rr,session,lv_source,sweep_time
 2026-05-08 07:30 UTC,XAUUSD,short,4707.51436,4712.65534,4691.52444,3.11,London,NewYorkH,H1_swing_low,2026-05-08 05:45 UTC
 2026-05-08 07:45 UTC,XAUUSD,short,4707.51436,4712.54494,4691.52444,3.18,London,NewYorkH,H1_swing_low,2026-05-08 05:45 UTC
 2026-05-12 07:00 UTC,GBPUSD,short,1.36168,1.36236,1.35866,4.44,London,NewYorkH,H1_swing_low,2026-05-12 05:45 UTC
+2026-05-12 07:45 UTC,GBPUSD,short,1.36103,1.36161,1.35866,4.09,London,AsianH,H1_swing_low,2026-05-12 07:30 UTC
