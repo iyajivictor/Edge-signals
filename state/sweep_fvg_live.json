@@ -1,1 +1,12 @@
-{}
+{
+  "XAUUSD_202605130900": {
+    "pair": "XAUUSD",
+    "direction": "short",
+    "side": "SELL",
+    "entry": 4718.15724,
+    "sl": 4725.2616,
+    "tp": 4689.34704,
+    "fired_at": "2026-05-13 11:00 UTC",
+    "outcome": ""
+  }
+}
