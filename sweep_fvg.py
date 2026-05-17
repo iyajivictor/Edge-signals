@@ -498,7 +498,3 @@ def cleanup_expired_pending():
     for pk in drop: pending.pop(pk, None)
     if drop: logger.info(f"sweep_fvg: Cleaned {len(drop)} pending entries")
     save_pending(pending)
-
-
-
-
