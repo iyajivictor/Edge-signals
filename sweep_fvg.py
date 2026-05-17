@@ -1,45 +1,44 @@
 """
-sweep_fvg.py — Sweep + FVG Fill Strategy Module for EDGE Signal Engine
-=======================================================================
-Detects liquidity sweeps followed by Fair Value Gap retracements on M15.
-Runs as a standalone module called from signal_engine.py alongside the
-existing Break & Retest engine. Completely isolated — shares no state
-files with B&R.
+sweep_fvg.py — H4 Zone Sweep + M15 FVG Strategy Module
+========================================================
+v7 — Two-stage signal architecture
 
-Changelog v5 (logic correction — FVG now sourced post-sweep):
-  - FVG search now looks FORWARD from sweep candle (was backward)
-  - Only bearish FVG valid after BSL sweep — imbalance created by fast
-    post-sweep drop, not a pre-existing gap (aligns with ICT/SMC doctrine)
-  - RETRACE_WIN tightened from 30 → 10 candles (~2.5 hrs on M15)
-  - FVG_WINDOW comment updated to reflect forward search direction
-  - Price/position guards on old forward search removed (no longer needed)
+Signal lifecycle:
+  Stage 1 — FVG FORMATION (scan() fires here):
+    · H4 sweep detected + M15 FVG confirmed in aftermath
+    · Telegram alert 1: "Set pending order at X"
+    · Sheet row written: status = PENDING_ENTRY
+    · Pending state saved to sweep_fvg_pending.json
 
-Changelog v4 (staleness + dedup + outcome tracking):
-  - SWEEP_MAX_AGE_M15 = 8: sweeps older than 8 candles (~2 hrs) are ignored
-  - dedup_key now includes sweep candle timestamp — prevents re-fire even if
-    sweep_fvg_fired.json fails to persist across GitHub Actions runs
-  - sweep_time and fired_at now formatted as 'YYYY-MM-DD HH:MM UTC' (matches B&R)
-  - SWEEP_LIVE_FILE added: confirmed signals written to state/sweep_fvg_live.json
-    for outcome resolution by signal_engine.py resolve_sweep_fvg_outcomes()
+  Stage 2 — ENTRY TRIGGERED (check_pending_entries() detects retrace):
+    · Price touches FVG zone on subsequent M15 scan
+    · sweep_fvg_live.json entry written → Replit begins monitoring
+    · Telegram alert 2: "Entry triggered — trade ACTIVE"
+    · Sheet status: PENDING_ENTRY → ACTIVE, entry_time filled
 
-Changelog v3 (post-backtest filter pass):
-  - Equal H/L removed as sweep source (largest loss driver across all 5 pairs)
-  - Valid sweep sources: PDH, AsianH, NewYorkH only
-  - MAX_RR = 5.0 ceiling added alongside MIN_RR = 3.0 floor
-  - Fallback TP removed entirely — no H1 level in 3–5R window = signal dropped
-  - Forex session gate: London only (07–12 UTC)
-  - XAUUSD session gate: Asian + London only (00–12 UTC), NY hard blocked
-  - XAUUSD SL: ATR-derived buffer (ATR×0.25) and floor (ATR×0.50)
-  - XAUUSD has dedicated config block; forex pairs share default config
-  - signal_engine.py call signature unchanged — no changes needed there
+  Stage 3 — TP1 HIT (Replit real-time):
+    · Telegram alert 3: "TP1 hit — 50% closed, move SL to BE"
+    · Sheet: tp1_outcome = WIN, tp1_close_time filled
 
-Changelog v2:
-  - Runs on ALL 5 strategy pairs (was EURUSD only)
-  - TP targets sourced from H1 swing highs/lows (was M15 active_lvls)
-  - MIN_RR raised to 1:3 (was 1.5)
-  - pip_size is now pair-aware (supports JPY pairs and XAUUSD)
-  - scan() signature: m15_candles, h1_candles, h4_candles, pair
-  - All state files prefixed sweep_fvg_* — zero overlap with B&R state
+  Stage 4 — FINAL OUTCOME (Replit real-time):
+    · FULL_WIN / TP1_BE / LOSS
+    · Telegram alert 4: final result + pnl_r
+    · Sheet: tp2_outcome + pnl_r filled
+
+FVG direction (corrected ICT):
+  Bearish FVG ↓: c3['high'] < c1['low']
+    top=c1['low'], bottom=c3['high'], SL=c1['high']+buf
+  Bullish FVG ↑: c3['low'] > c1['high']
+    top=c3['low'], bottom=c1['high'], SL=c1['low']-buf
+
+Sheet columns (SweepFVG tab, 18 cols):
+  1 fired_at   5 sl    9  rr_tp2    13 sweep_time   17 tp2_outcome
+  2 pair        6 tp1   10 sl_pips   14 status        18 pnl_r
+  3 direction   7 tp2   11 zone_src  15 entry_time
+  4 entry       8 rr_tp1 12 session  16 tp1_outcome
+
+Pairs: EURUSD GBPUSD USDJPY AUDJPY XAUUSD
+       CADJPY USDCAD EURJPY GBPJPY GBPAUD
 """
 
 import json
@@ -51,697 +50,455 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-# ── PIP SIZE PER PAIR ──────────────────────────────────────────────────────
+# ── PIP / DP ────────────────────────────────────────────────────────────────
 PIP_SIZE = {
-    'EURUSD': 0.0001,
-    'GBPUSD': 0.0001,
-    'USDJPY': 0.01,
-    'AUDJPY': 0.01,
-    'XAUUSD': 0.10,
+    'EURUSD': 0.0001, 'GBPUSD': 0.0001, 'USDCAD': 0.0001, 'GBPAUD': 0.0001,
+    'USDJPY': 0.01,   'AUDJPY': 0.01,   'CADJPY': 0.01,
+    'EURJPY': 0.01,   'GBPJPY': 0.01,   'XAUUSD': 0.10,
 }
-DEFAULT_PIP = 0.0001
-
-
-def get_pip(pair: str) -> float:
-    return PIP_SIZE.get(pair, DEFAULT_PIP)
-
-
-# ── SHARED STRATEGY PARAMETERS ─────────────────────────────────────────────
-SWING_N      = 3     # M15 swing confirmation candles each side
-H1_SWING_N   = 2     # H1 swing confirmation candles each side
-MIN_FVG_PIPS = 2     # minimum FVG gap size in pips
-MIN_RR       = 3.0   # minimum RR — signals below this are dropped
-MAX_RR       = 5.0   # maximum RR — signals beyond this are dropped (no fallback)
-LOOKBACK          = 50    # M15 candles before external levels expire
-FVG_WINDOW        = 10    # candles after sweep to search for matching FVG
-RETRACE_WIN       = 10    # candles after FVG forms to wait for retrace (tightened from 30)
-FVG_MAX_AGE       = 10    # FVG expires after N candles with no retrace
-H1_LOOKBACK       = 30    # H1 candles used for TP target pool
-SWEEP_MAX_AGE_M15 = 8     # max candles ago a sweep candle can be (~2 hours on M15)
-
-# ── VALID SWEEP SOURCES ────────────────────────────────────────────────────
-# equal_hl removed — negative P&L across all 5 pairs in backtest.
-# LondonH, LondonL, AsianL, PDL, NewYorkL removed — underperforming.
-# Only BSL sources (highs) retained: PDH, AsianH, NewYorkH.
-VALID_SWEEP_SOURCES = {'PDH', 'AsianH', 'NewYorkH'}
-
-# ── SESSION DEFINITIONS (UTC) ──────────────────────────────────────────────
-SESSIONS = {
-    'Asian':   (0,  6),
-    'London':  (7,  12),
-    'NewYork': (13, 17),
+DP_SIZE = {
+    'EURUSD': 5, 'GBPUSD': 5, 'USDCAD': 5, 'GBPAUD': 5,
+    'USDJPY': 3, 'AUDJPY': 3, 'CADJPY': 3,
+    'EURJPY': 3, 'GBPJPY': 3, 'XAUUSD': 2,
 }
+def get_pip(pair): return PIP_SIZE.get(pair, 0.0001)
+def get_dp(pair):  return DP_SIZE.get(pair, 5)
 
-# Allowed sessions per pair — confirmed from backtest session breakdown.
-# Forex: London only. Gold: Asian + London. NY blocked for all pairs.
-PAIR_SESSIONS = {
-    'EURUSD': {'London'},
-    'GBPUSD': {'London'},
-    'USDJPY': {'London'},
-    'AUDJPY': {'London'},
-    'XAUUSD': {'Asian', 'London'},
-}
+# ── PARAMS ───────────────────────────────────────────────────────────────────
+ATR_PERIOD      = 14
+EQ_ATR_PCT      = 0.20
+EQ_MIN_CANDLES  = 2
+ZONE_LOOKBACK   = 60
+MIN_FVG_PIPS    = 1.5
+FVG_M15_WINDOW  = 20
+TP1_RR          = 1.5
+MIN_RR          = 2.0
+MAX_RR          = 6.0
+H4_SWING_N      = 3
+H4_TP_LOOKBACK  = 40
+SIGNAL_TTL_HOURS = 12
 
-# ── XAUUSD-SPECIFIC CONFIG ─────────────────────────────────────────────────
-# Forex pairs use module-level defaults above.
-# Gold uses ATR-derived SL sizing and its own session gate.
-XAUUSD_CONFIG = {
-    'sessions':       {'Asian', 'London'},  # NY hard blocked
-    'atr_period':     14,                   # ATR lookback (M15 candles)
-    'atr_buf_mult':   0.25,                 # SL buffer = ATR × this
-    'atr_floor_mult': 0.50,                 # min sl_dist = ATR × this
-    'risk_pct':       0.5,                  # matches B&R engine Gold risk
-    'min_rr':         MIN_RR,               # inherits shared floor
-    'max_rr':         MAX_RR,               # inherits shared ceiling
-}
+XAUUSD_CONFIG = {'atr_period': 14, 'atr_buf_mult': 0.25, 'atr_floor_mult': 0.50}
 
-# ── STATE FILES — isolated from B&R engine ────────────────────────────────
-STATE_FILE         = 'state/sweep_fvg_state.json'
-FIRED_SIGNALS_FILE = 'state/sweep_fvg_fired.json'
-SWEEP_LIVE_FILE    = 'state/sweep_fvg_live.json'   # active signals awaiting outcome
-SIGNAL_TTL_HOURS   = 10   # covers full London session + buffer (was 4h — too short)
+SESSIONS = {'Asian': (0, 6), 'London': (7, 12), 'NewYork': (13, 17)}
+
+PAIR_SESSIONS = {p: {'Asian', 'London'} for p in PIP_SIZE}
+
+# State files
+FIRED_FILE   = 'state/sweep_fvg_fired.json'
+LIVE_FILE    = 'state/sweep_fvg_live.json'
+PENDING_FILE = 'state/sweep_fvg_pending.json'
 
 
-# ── SESSION HELPERS ────────────────────────────────────────────────────────
-def get_session(hour_utc: int) -> str | None:
-    for name, (start, end) in SESSIONS.items():
-        if start <= hour_utc < end:
-            return name
+# ── HELPERS ───────────────────────────────────────────────────────────────────
+def get_session(h):
+    for name, (s, e) in SESSIONS.items():
+        if s <= h < e: return name
     return None
 
+def is_valid_session(pair, dt):
+    sess = get_session(dt.hour)
+    return sess in PAIR_SESSIONS.get(pair, {'London'}) if sess else False
 
-def is_valid_session(pair: str, dt: datetime) -> bool:
-    """Return True only if the current session is allowed for this pair."""
-    session = get_session(dt.hour)
-    if session is None:
-        return False
-    allowed = PAIR_SESSIONS.get(pair, {'London'})
-    return session in allowed
-
-
-# ── ATR CALCULATION (XAUUSD SL SIZING) ────────────────────────────────────
-def calc_atr(candles: list[dict], period: int = 14) -> float:
-    """
-    Average True Range over the last `period` candles.
-    Called with the most recent 20 M15 candles for XAUUSD SL sizing.
-    """
-    if len(candles) < 2:
-        return 0.0
-    trs = []
-    for i in range(1, len(candles)):
-        high = candles[i]['high']
-        low  = candles[i]['low']
-        prev = candles[i-1]['close']
-        trs.append(max(
-            high - low,
-            abs(high - prev),
-            abs(low  - prev),
-        ))
+def calc_atr(candles, period=ATR_PERIOD):
+    if len(candles) < 2: return 0.0
+    trs = [max(candles[i]['high'] - candles[i]['low'],
+               abs(candles[i]['high'] - candles[i-1]['close']),
+               abs(candles[i]['low']  - candles[i-1]['close']))
+           for i in range(1, len(candles))]
     return float(np.mean(trs[-period:]))
 
+def _load_json(path):
+    if os.path.exists(path):
+        try:
+            with open(path) as f: return json.load(f)
+        except Exception: return {}
+    return {}
 
-# ── M15 SWING DETECTION ────────────────────────────────────────────────────
-def find_swing_highs(candles: list[dict], N: int = SWING_N) -> list[int]:
-    highs = []
-    for i in range(N, len(candles) - N):
-        h = candles[i]['high']
-        if all(h > candles[i-j]['high'] for j in range(1, N+1)) and \
-           all(h > candles[i+j]['high'] for j in range(1, N+1)):
-            highs.append(i)
-    return highs
+def _save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as f: json.dump(data, f, indent=2)
 
+load_fired   = lambda: _load_json(FIRED_FILE)
+save_fired   = lambda d: _save_json(FIRED_FILE, d)
+load_live    = lambda: _load_json(LIVE_FILE)
+save_live    = lambda d: _save_json(LIVE_FILE, d)
+load_pending = lambda: _load_json(PENDING_FILE)
+save_pending = lambda d: _save_json(PENDING_FILE, d)
 
-def find_swing_lows(candles: list[dict], N: int = SWING_N) -> list[int]:
-    lows = []
-    for i in range(N, len(candles) - N):
-        l = candles[i]['low']
-        if all(l < candles[i-j]['low'] for j in range(1, N+1)) and \
-           all(l < candles[i+j]['low'] for j in range(1, N+1)):
-            lows.append(i)
-    return lows
+def is_fired(key, fired):
+    if key not in fired: return False
+    try:
+        age = (datetime.now(timezone.utc) -
+               datetime.fromisoformat(fired[key])).total_seconds() / 3600
+        return age < SIGNAL_TTL_HOURS
+    except Exception: return False
 
-
-# ── M15 EXTERNAL LEVELS (sweep targets) ───────────────────────────────────
-def build_external_levels(candles: list[dict]) -> dict[int, list[dict]]:
-    """
-    Build Previous Day High and Previous Session High levels from M15 candles.
-    Only sources in VALID_SWEEP_SOURCES are retained (PDH, AsianH, NewYorkH).
-    PDL and all session lows are excluded.
-    Returns dict: candle_index → list of levels active from that index.
-    """
-    levels_by_idx = defaultdict(list)
-
-    by_date      = defaultdict(list)
-    for idx, c in enumerate(candles):
-        by_date[c['time'].date()].append((idx, c))
-    sorted_dates = sorted(by_date.keys())
-
-    # Previous Day High only (PDL excluded from VALID_SWEEP_SOURCES)
-    for d_idx in range(len(sorted_dates) - 1):
-        today_data  = by_date[sorted_dates[d_idx]]
-        next_day    = sorted_dates[d_idx + 1]
-        pdh         = max(c['high'] for _, c in today_data)
-        activate_at = by_date[next_day][0][0]
-        levels_by_idx[activate_at].append(
-            {'price': round(pdh, 5), 'side': 'BSL', 'source': 'PDH', 'swept': False}
-        )
-
-    # Previous Session Highs only — filtered to VALID_SWEEP_SOURCES
-    by_date_session = defaultdict(lambda: defaultdict(list))
-    for idx, c in enumerate(candles):
-        sess = get_session(c['time'].hour)
-        if sess:
-            by_date_session[c['time'].date()][sess].append((idx, c))
-
-    session_order    = ['Asian', 'London', 'NewYork']
-    all_session_keys = []
-    for date in sorted_dates:
-        for sess in session_order:
-            if sess in by_date_session[date]:
-                all_session_keys.append((date, sess))
-
-    for s_idx in range(len(all_session_keys) - 1):
-        date,      sess      = all_session_keys[s_idx]
-        next_date, next_sess = all_session_keys[s_idx + 1]
-        sess_data   = by_date_session[date][sess]
-        sh          = max(c['high'] for _, c in sess_data)
-        activate_at = by_date_session[next_date][next_sess][0][0]
-        src         = f'{sess}H'
-        if src in VALID_SWEEP_SOURCES:
-            levels_by_idx[activate_at].append(
-                {'price': round(sh, 5), 'side': 'BSL', 'source': src, 'swept': False}
-            )
-
-    return levels_by_idx
+def mark_fired(key, fired):
+    now = datetime.now(timezone.utc)
+    fired.update({k: v for k, v in fired.items()
+                  if (now - datetime.fromisoformat(v)).total_seconds() / 3600
+                  < SIGNAL_TTL_HOURS * 2})
+    fired[key] = now.isoformat()
 
 
-# ── H1 TARGET LEVELS (TP sourcing) ────────────────────────────────────────
-def build_h1_target_levels(h1_candles: list[dict],
-                            lookback: int = H1_LOOKBACK) -> list[dict]:
-    """
-    Extract H1 swing highs/lows as TP target pool.
-    BSL = H1 swing high (target for longs going up).
-    SSL = H1 swing low  (target for shorts going down).
-    """
-    if not h1_candles or len(h1_candles) < H1_SWING_N * 2 + 1:
-        return []
-    recent   = h1_candles[-lookback:]
-    h1_highs = find_swing_highs(recent, N=H1_SWING_N)
-    h1_lows  = find_swing_lows(recent,  N=H1_SWING_N)
-    levels   = []
-    for idx in h1_highs:
-        levels.append({'price': round(recent[idx]['high'], 5),
-                       'side': 'BSL', 'source': 'H1_swing_high', 'swept': False})
-    for idx in h1_lows:
-        levels.append({'price': round(recent[idx]['low'],  5),
-                       'side': 'SSL', 'source': 'H1_swing_low',  'swept': False})
-    return levels
+# ── H4 ZONE DETECTION ────────────────────────────────────────────────────────
+def find_eq_zones(h4, up_to_i, side='high'):
+    atr = calc_atr(h4[max(0, up_to_i - ATR_PERIOD):up_to_i])
+    if atr <= 0: return []
+    tol    = atr * EQ_ATR_PCT
+    window = h4[max(0, up_to_i - ZONE_LOOKBACK):up_to_i]
+    vals   = [(i, c['high'] if side == 'high' else c['low'])
+              for i, c in enumerate(window)]
+    zones  = []; used = set()
+    for i, (ci, vi) in enumerate(vals):
+        if ci in used: continue
+        cluster = [ci]; cv = [vi]
+        for j, (cj, vj) in enumerate(vals):
+            if j == i or cj in used: continue
+            if abs(vj - vi) <= tol: cluster.append(cj); cv.append(vj)
+        if len(cluster) >= EQ_MIN_CANDLES:
+            for c in cluster: used.add(c)
+            zones.append({'top': round(max(cv), 5), 'bottom': round(min(cv), 5),
+                          'touches': len(cluster),
+                          'side': 'BSL' if side == 'high' else 'SSL'})
+    return zones
+
+def is_bsl_sweep(c, z): return c['high'] > z['top']    and c['close'] < z['top']
+def is_ssl_sweep(c, z): return c['low']  < z['bottom'] and c['close'] > z['bottom']
 
 
-# ── FVG DETECTION ──────────────────────────────────────────────────────────
-def build_fvg_index(candles: list[dict],
-                    pip: float,
-                    min_gap_pips: int = MIN_FVG_PIPS) -> dict[int, list[dict]]:
-    """
-    Index FVGs by the candle index they form on (M15).
-    Bullish FVG: c3.high < c1.low  — gap downward (entry zone for longs)
-    Bearish FVG: c3.low  > c1.high — gap upward   (entry zone for shorts)
-    """
-    fvg_index = defaultdict(list)
-    min_gap   = min_gap_pips * pip
+# ── M15 FVG INDEX ─────────────────────────────────────────────────────────────
+def build_fvg_index(candles, pip):
+    idx = defaultdict(list); min_gap = MIN_FVG_PIPS * pip
     for i in range(1, len(candles) - 1):
         c1, c3 = candles[i-1], candles[i+1]
-        if c3['high'] < c1['low']:
-            gap = c1['low'] - c3['high']
-            if gap >= min_gap:
-                fvg_index[i+1].append({
-                    'type': 'bullish', 'top': round(c1['low'], 5),
-                    'bottom': round(c3['high'], 5), 'formed_i': i+1,
-                })
-        if c3['low'] > c1['high']:
-            gap = c3['low'] - c1['high']
-            if gap >= min_gap:
-                fvg_index[i+1].append({
-                    'type': 'bearish', 'top': round(c3['low'], 5),
-                    'bottom': round(c1['high'], 5), 'formed_i': i+1,
-                })
-    return fvg_index
+        if c3['high'] < c1['low'] and (c1['low'] - c3['high']) >= min_gap:
+            idx[i+1].append({'type': 'bearish', 'top': round(c1['low'], 5),
+                'bottom': round(c3['high'], 5), 'sl_anchor': round(c1['high'], 5),
+                'formed_i': i+1})
+        if c3['low'] > c1['high'] and (c3['low'] - c1['high']) >= min_gap:
+            idx[i+1].append({'type': 'bullish', 'top': round(c3['low'], 5),
+                'bottom': round(c1['high'], 5), 'sl_anchor': round(c1['low'], 5),
+                'formed_i': i+1})
+    return idx
 
 
-# ── SWEEP DETECTION ────────────────────────────────────────────────────────
-def is_sweep(candle: dict, level_price: float, side: str) -> bool:
-    """
-    BSL sweep: wick pierces above level, candle closes back below.
-    SSL sweep: wick pierces below level, candle closes back above.
-    Note: only BSL sweeps fire post-filter (all active sources are highs),
-    but SSL logic is retained for future extensibility.
-    """
-    if side == 'BSL':
-        return candle['high'] > level_price and candle['close'] < level_price
+# ── H4 TP2 SOURCING ───────────────────────────────────────────────────────────
+def get_h4_tp2(h4, up_to_i, entry, sl_dist, direction):
+    if sl_dist <= 0: return None, None
+    start  = max(H4_SWING_N, up_to_i - H4_TP_LOOKBACK)
+    window = h4[start:up_to_i]; N = H4_SWING_N
+    atr    = calc_atr(h4[max(0, up_to_i - ATR_PERIOD):up_to_i])
+    tol    = atr * EQ_ATR_PCT if atr > 0 else 1e-9
+    levels = []
+    if direction == 'short':
+        for i in range(N, len(window) - N):
+            l = window[i]['low']
+            if all(l < window[i-j]['low'] for j in range(1, N+1)) and \
+               all(l < window[i+j]['low'] for j in range(1, N+1)): levels.append(round(l, 5))
+        bkts = defaultdict(list)
+        for c in window: bkts[round(c['low'] / tol) * tol].append(c['low'])
+        for g in bkts.values():
+            if len(g) >= EQ_MIN_CANDLES: levels.append(round(min(g), 5))
+        cands = [(lv, (entry - lv) / sl_dist) for lv in set(levels)
+                 if lv < entry and MIN_RR <= (entry - lv) / sl_dist <= MAX_RR]
+        if not cands: return None, None
+        cands.sort(key=lambda x: x[0], reverse=True)
     else:
-        return candle['low'] < level_price and candle['close'] > level_price
+        for i in range(N, len(window) - N):
+            h = window[i]['high']
+            if all(h > window[i-j]['high'] for j in range(1, N+1)) and \
+               all(h > window[i+j]['high'] for j in range(1, N+1)): levels.append(round(h, 5))
+        bkts = defaultdict(list)
+        for c in window: bkts[round(c['high'] / tol) * tol].append(c['high'])
+        for g in bkts.values():
+            if len(g) >= EQ_MIN_CANDLES: levels.append(round(max(g), 5))
+        cands = [(lv, (lv - entry) / sl_dist) for lv in set(levels)
+                 if lv > entry and MIN_RR <= (lv - entry) / sl_dist <= MAX_RR]
+        if not cands: return None, None
+        cands.sort(key=lambda x: x[0])
+    return round(cands[0][0], 5), round(cands[0][1], 2)
 
 
-# ── STATE MANAGEMENT ───────────────────────────────────────────────────────
-def load_state() -> dict:
-    if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, 'r') as f:
-            return json.load(f)
-    return {'pending_setups': [], 'active_levels': []}
+# ── TELEGRAM MESSAGE FORMATTERS ───────────────────────────────────────────────
+def format_pending_message(sig):
+    pair  = sig['pair']; dp = get_dp(pair)
+    side  = 'SELL' if sig['direction'] == 'short' else 'BUY'
+    emoji = '🔻' if side == 'SELL' else '🔺'
+    return (
+        f"{emoji} *{pair} — H4 Zone Sweep*\n\n"
+        f"_FVG confirmed. Set pending order._\n\n"
+        f"Direction : `{side}`\n"
+        f"Entry     : `{sig['entry']:.{dp}f}`  ← pending order\n"
+        f"Stop Loss : `{sig['sl']:.{dp}f}`\n"
+        f"TP1 (50%) : `{sig['tp1']:.{dp}f}`  RR `1:{sig['rr_tp1']:.1f}`\n"
+        f"TP2 (50%) : `{sig['tp2']:.{dp}f}`  RR `1:{sig['rr_tp2']:.1f}`\n\n"
+        f"Session   : `{sig['session']}`\n"
+        f"Zone      : `{sig['zone_src']}`\n"
+        f"Swept at  : `{sig['sweep_time']}`\n\n"
+        f"_⏳ Waiting for retrace into FVG..._"
+    )
+
+def format_entry_message(sig):
+    pair  = sig['pair']; dp = get_dp(pair)
+    side  = 'SELL' if sig['direction'] == 'short' else 'BUY'
+    return (
+        f"⚡ *{pair} — Entry Triggered!*\n\n"
+        f"Direction : `{side}`\n"
+        f"Entry     : `{sig['entry']:.{dp}f}` ✅\n"
+        f"Stop Loss : `{sig['sl']:.{dp}f}`\n"
+        f"TP1 (50%) : `{sig['tp1']:.{dp}f}`\n"
+        f"TP2 (50%) : `{sig['tp2']:.{dp}f}`\n\n"
+        f"_🟢 Trade ACTIVE. Monitoring started._"
+    )
+
+def format_tp1_alert(sig):
+    pair = sig['pair']; dp = get_dp(pair)
+    side = 'SELL' if sig['direction'] == 'short' else 'BUY'
+    return (
+        f"🎯 *{pair} — TP1 Hit!*\n\n"
+        f"Direction : `{side}`\n"
+        f"TP1       : `{sig['tp1']:.{dp}f}` ✅  50% closed\n"
+        f"SL → BE   : `{sig['entry']:.{dp}f}`  ← move stop now\n"
+        f"TP2 active: `{sig['tp2']:.{dp}f}`  RR `1:{sig['rr_tp2']:.1f}`\n\n"
+        f"_Remainder running to TP2._"
+    )
 
 
-def save_state(state: dict):
-    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-    with open(STATE_FILE, 'w') as f:
-        json.dump(state, f, indent=2, default=str)
-
-
-# ── PERSISTENT DEDUP ───────────────────────────────────────────────────────
-def load_fired_signals() -> dict:
-    if os.path.exists(FIRED_SIGNALS_FILE):
-        try:
-            with open(FIRED_SIGNALS_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-
-def save_fired_signals(fired: dict):
-    os.makedirs(os.path.dirname(FIRED_SIGNALS_FILE), exist_ok=True)
-    with open(FIRED_SIGNALS_FILE, 'w') as f:
-        json.dump(fired, f, indent=2)
-
-
-# ── SWEEP LIVE SIGNAL STATE (for outcome tracking) ────────────────────────
-def load_sweep_live() -> dict:
-    """Load active SweepFVG signals waiting for outcome resolution."""
-    if os.path.exists(SWEEP_LIVE_FILE):
-        try:
-            with open(SWEEP_LIVE_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-
-def save_sweep_live(live: dict):
-    """Persist active SweepFVG signals to state file."""
-    os.makedirs(os.path.dirname(SWEEP_LIVE_FILE), exist_ok=True)
-    with open(SWEEP_LIVE_FILE, 'w') as f:
-        json.dump(live, f, indent=2)
-
-
-def is_already_fired(dedup_key: str, fired: dict) -> bool:
-    if dedup_key not in fired:
-        return False
-    try:
-        fired_at  = datetime.fromisoformat(fired[dedup_key])
-        age_hours = (datetime.now(timezone.utc) - fired_at).total_seconds() / 3600
-        return age_hours < SIGNAL_TTL_HOURS
-    except Exception:
-        return False
-
-
-def mark_as_fired(dedup_key: str, fired: dict):
-    now    = datetime.now(timezone.utc)
-    pruned = {
-        k: v for k, v in fired.items()
-        if (now - datetime.fromisoformat(v)).total_seconds() / 3600 < SIGNAL_TTL_HOURS * 2
-    }
-    fired.clear()
-    fired.update(pruned)
-    fired[dedup_key] = now.isoformat()
-
-
-# ── SIGNAL FORMATTER ───────────────────────────────────────────────────────
-def format_signal(setup: dict) -> dict:
-    direction  = setup['direction']
-    pair       = setup['pair']
-    entry      = setup['entry']
-    sl         = setup['sl']
-    tp         = setup['tp']
-    rr         = setup['rr']
-    session    = setup['session']
-    lv_source  = setup['lv_source']
-    tp_source  = setup['tp_source']
-    sweep_time = setup['sweep_time']
-
-    emoji = '🔻' if direction == 'short' else '🔺'
-    side  = 'SELL' if direction == 'short' else 'BUY'
-
-    return {
-        'strategy':   'Sweep+FVG',
-        'pair':       pair,
-        'direction':  direction,
-        'side':       side,
-        'entry':      entry,
-        'sl':         sl,
-        'tp':         tp,
-        'rr':         round(rr, 2),
-        'session':    session,
-        'lv_source':  lv_source,
-        'tp_source':  tp_source,
-        'sweep_time': sweep_time,
-        'fired_at':   setup.get('fired_at', ''),
-        'h1_bias':    setup.get('h1_bias', ''),
-        'message': (
-            f"{emoji} *{pair} — Sweep+FVG Signal*\n"
-            f"Direction  : `{side}`\n"
-            f"Entry      : `{entry}`\n"
-            f"Stop Loss  : `{sl}`\n"
-            f"Take Profit: `{tp}`\n"
-            f"RR         : `1:{rr:.1f}`\n"
-            f"Session    : `{session}`\n"
-            f"Sweep src  : `{lv_source}`\n"
-            f"TP src     : `{tp_source}`\n"
-            f"Swept at   : `{sweep_time}`"
-        ),
-    }
-
-
-# ── CORE SCAN FUNCTION ─────────────────────────────────────────────────────
-def scan(m15_candles: list[dict],
-         h1_candles:  list[dict] | None = None,
-         h4_candles:  list[dict] | None = None,
-         pair:        str = 'EURUSD') -> list[dict]:
+# ── STAGE 1: scan() ────────────────────────────────────────────────────────────
+def scan(m15_candles, h1_candles=None, h4_candles=None, pair='EURUSD'):
     """
-    Main entry point called each cron run by signal_engine.py.
-
-    Args:
-        m15_candles : M15 candle dicts — time(datetime), open, high, low, close, volume
-        h1_candles  : H1 candle dicts from HTF cache (TP target levels)
-        h4_candles  : H4 candle dicts — accepted, reserved for future bias filter
-        pair        : Instrument string e.g. 'EURUSD', 'USDJPY', 'XAUUSD'
-
-    Returns:
-        List of signal dicts fired this run (may be empty).
+    Called every 15min by signal_engine.py.
+    Detects H4 sweep + M15 FVG formation.
+    Fires Stage 1 alert at FVG confirmation (not retrace).
+    Returns list of stage-1 signals for signal_engine to send.
     """
     pip     = get_pip(pair)
     is_gold = (pair == 'XAUUSD')
-    cfg     = XAUUSD_CONFIG if is_gold else {}
-    min_rr  = cfg.get('min_rr', MIN_RR)
-    max_rr  = cfg.get('max_rr', MAX_RR)
 
-    min_candles = SWING_N * 2 + FVG_WINDOW + RETRACE_WIN + 5
-    if len(m15_candles) < min_candles:
-        logger.warning(
-            f"sweep_fvg [{pair}]: Only {len(m15_candles)} M15 candles "
-            f"— need {min_candles}. Skipping."
-        )
-        return []
+    if len(m15_candles) < FVG_M15_WINDOW + 5:
+        logger.warning(f"[{pair}] Insufficient M15 candles"); return []
+    if not h4_candles or len(h4_candles) < ZONE_LOOKBACK + H4_SWING_N * 2 + 5:
+        logger.warning(f"[{pair}] Insufficient H4 candles"); return []
 
-    signals_fired = []
-    fired         = load_fired_signals()
-    latest        = m15_candles[-1]
-    latest_time   = latest['time']
+    latest_time = m15_candles[-1]['time']
 
-    # ── Pair-specific session gate ────────────────────────────────────────
-    if not is_valid_session(pair, latest_time):
-        logger.info(
-            f"sweep_fvg [{pair}]: Session blocked — "
-            f"'{get_session(latest_time.hour) or 'off-hours'}' "
-            f"not in allowed sessions for {pair}."
-        )
-        return []
-
-    current_session = get_session(latest_time.hour)
-
-    # ── XAUUSD: ATR-derived SL parameters ────────────────────────────────
-    gold_sl_buf   = None
-    gold_sl_floor = None
+    gold_sl_buf = gold_sl_floor = None
     if is_gold:
-        recent_20   = m15_candles[-20:]
-        current_atr = calc_atr(recent_20, period=cfg['atr_period'])
-        if current_atr <= 0:
-            logger.warning(f"sweep_fvg [XAUUSD]: ATR=0, skipping run.")
-            return []
-        gold_sl_buf   = current_atr * cfg['atr_buf_mult']
-        gold_sl_floor = current_atr * cfg['atr_floor_mult']
-        logger.info(
-            f"sweep_fvg [XAUUSD]: ATR={current_atr:.3f} "
-            f"| sl_buf={gold_sl_buf:.3f} | sl_floor={gold_sl_floor:.3f}"
+        cfg = XAUUSD_CONFIG
+        atr = calc_atr(m15_candles[-20:], period=cfg['atr_period'])
+        if atr <= 0: logger.warning("[XAUUSD] ATR=0"); return []
+        gold_sl_buf   = atr * cfg['atr_buf_mult']
+        gold_sl_floor = atr * cfg['atr_floor_mult']
+
+    fired   = load_fired()
+    pending = load_pending()
+    signals = []
+
+    fvg_index = build_fvg_index(m15_candles, pip)
+    n_m15     = len(m15_candles)
+    n_h4      = len(h4_candles)
+    m15_ts    = [c['time'] for c in m15_candles]
+
+    def first_m15_at(ts):
+        lo, hi = 0, n_m15
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if m15_ts[mid] < ts: lo = mid + 1
+            else: hi = mid
+        return lo if lo < n_m15 else None
+
+    for h4_i in range(max(ZONE_LOOKBACK + 1, n_h4 - 3), n_h4):
+        h4c     = h4_candles[h4_i]
+        h4_time = h4c['time']
+        ms_start = first_m15_at(h4_time)
+        if ms_start is None: continue
+
+        setups = (
+            [(z, 'short', 'bearish') for z in find_eq_zones(h4_candles, h4_i, 'high')] +
+            [(z, 'long',  'bullish') for z in find_eq_zones(h4_candles, h4_i, 'low')]
         )
+        for zone, direction, fvg_type in setups:
+            if direction == 'short' and not is_bsl_sweep(h4c, zone): continue
+            if direction == 'long'  and not is_ssl_sweep(h4c, zone): continue
 
-    # ── Build sweep target pool (external levels only, no equal_hl) ───────
-    ext_levels = build_external_levels(m15_candles)
-    fvg_index  = build_fvg_index(m15_candles, pip)
+            zone_key  = f"LVL_{pair}_{zone['side']}_{zone['top']:.5f}_{h4_time.strftime('%Y%m%d%H')}"
+            if is_fired(zone_key, fired): continue
 
-    n           = len(m15_candles)
-    active_lvls = []
-    for idx, lvs in ext_levels.items():
-        if idx <= n - 1:
-            for lv in lvs:
-                if lv['source'] in VALID_SWEEP_SOURCES:
-                    active_lvls.append({**lv, 'swept': False})
-
-    # ── Build H1 TP target pool ───────────────────────────────────────────
-    h1_levels = build_h1_target_levels(h1_candles) if h1_candles else []
-    if not h1_levels:
-        logger.info(
-            f"sweep_fvg [{pair}]: No H1 levels — "
-            f"all setups this run dropped (no fallback TP)."
-        )
-        # Don't return early — active_lvls sweep detection still runs,
-        # but every setup will hit the tp=None guard below and be dropped.
-
-    # ── Scan for setups ───────────────────────────────────────────────────
-    # Use full lookback for the scan so retrace detection works correctly.
-    # Staleness is enforced per-candle inside the loop: if the sweep candle
-    # index is more than SWEEP_MAX_AGE_M15 candles before the latest, skip it.
-    scan_start = max(SWING_N, n - FVG_WINDOW - RETRACE_WIN - 5)
-
-    for i in range(scan_start, n - 1):
-        # ── Staleness gate — drop sweeps older than SWEEP_MAX_AGE_M15 ────
-        if (n - 1) - i > SWEEP_MAX_AGE_M15:
-            continue
-        candle  = m15_candles[i]
-        session = get_session(candle['time'].hour)
-        if not session:
-            continue
-
-        for lv in active_lvls:
-            if lv.get('swept'):
-                continue
-
-            lv_price = lv['price']
-            side     = lv['side']
-
-            if not is_sweep(candle, lv_price, side):
-                continue
-
-            lv['swept'] = True
-            direction       = 'short' if side == 'BSL' else 'long'
-            target_fvg_type = 'bullish' if direction == 'short' else 'bearish'
-
-            # ── Find matching FVG formed AFTER the sweep ──────────────────
-            # Post-sweep price moves fast, creating an imbalance (FVG).
-            # For BSL sweeps (short): look for bearish FVG in candles
-            # immediately following the sweep — the gap left by the
-            # aggressive drop after liquidity was grabbed above the level.
-            # Search forward up to FVG_WINDOW candles from sweep candle.
-            sweep_fvg  = None
-            search_end = min(n, i + FVG_WINDOW + 1)
-            for j in range(i + 1, search_end):
+            # Find FVG in M15 aftermath
+            sweep_fvg = None
+            for j in range(ms_start, min(n_m15, ms_start + FVG_M15_WINDOW)):
                 for fvg in fvg_index.get(j, []):
-                    if fvg['type'] == target_fvg_type:
-                        sweep_fvg = fvg; break
-                if sweep_fvg:
-                    break
-
-            if not sweep_fvg:
-                continue
+                    if fvg['type'] == fvg_type: sweep_fvg = fvg; break
+                if sweep_fvg: break
+            if not sweep_fvg: continue
 
             fvg_top    = sweep_fvg['top']
             fvg_bottom = sweep_fvg['bottom']
             fvg_mid    = round((fvg_top + fvg_bottom) / 2, 5)
-            fvg_formed = sweep_fvg['formed_i']
+            sl_anchor  = sweep_fvg['sl_anchor']
 
-            # ── Wait for retrace into FVG ─────────────────────────────────
-            entry_triggered = False
-            for k in range(i + 1, n):
-                if k - fvg_formed > FVG_MAX_AGE:
-                    break
-                fc = m15_candles[k]
-                if direction == 'short':
-                    if fc['high'] >= fvg_bottom and fc['low'] <= fvg_top:
-                        entry_triggered = True; break
-                    if fc['low'] < fvg_bottom - 10 * pip:
-                        break
-                else:
-                    if fc['low'] <= fvg_top and fc['high'] >= fvg_bottom:
-                        entry_triggered = True; break
-                    if fc['high'] > fvg_top + 10 * pip:
-                        break
-
-            if not entry_triggered:
-                continue
-
-            # ── SL calculation ────────────────────────────────────────────
             if is_gold:
-                sl_val  = round(
-                    candle['high'] + gold_sl_buf if direction == 'short'
-                    else candle['low'] - gold_sl_buf,
-                    5
-                )
+                sl_val  = round(sl_anchor + gold_sl_buf if direction == 'short'
+                                else sl_anchor - gold_sl_buf, 5)
                 sl_dist = abs(fvg_mid - sl_val)
-                if sl_dist < gold_sl_floor:
-                    logger.info(
-                        f"sweep_fvg [XAUUSD]: Dropped — sl_dist {sl_dist:.3f} "
-                        f"< ATR floor {gold_sl_floor:.3f}"
-                    )
-                    continue
+                if sl_dist < gold_sl_floor: continue
             else:
-                sl_buf  = 2 * pip
-                sl_val  = round(
-                    candle['high'] + sl_buf if direction == 'short'
-                    else candle['low'] - sl_buf,
-                    5
-                )
+                buf     = 2 * pip
+                sl_val  = round(sl_anchor + buf if direction == 'short'
+                                else sl_anchor - buf, 5)
                 sl_dist = abs(fvg_mid - sl_val)
-                if sl_dist < 2 * pip:
-                    continue
+                if sl_dist < 2 * pip: continue
 
-            # ── TP from H1 levels — 3R–5R window only, no fallback ────────
-            # Candidate levels must sit within [MIN_RR, MAX_RR] of sl_dist.
-            # If no qualifying level exists the setup is dropped entirely.
-            tp        = None
-            tp_source = ''
+            tp1       = round(fvg_mid - TP1_RR * sl_dist if direction == 'short'
+                              else fvg_mid + TP1_RR * sl_dist, 5)
+            tp2, rr2  = get_h4_tp2(h4_candles, h4_i, fvg_mid, sl_dist, direction)
+            if tp2 is None: continue
 
-            if direction == 'short':
-                cands = [
-                    lv2['price'] for lv2 in h1_levels
-                    if lv2['side'] == 'SSL'
-                    and lv2['price'] < fvg_mid
-                    and min_rr <= abs(fvg_mid - lv2['price']) / sl_dist <= max_rr
-                ]
-                if cands:
-                    tp        = round(max(cands), 5)   # nearest valid level
-                    tp_source = 'H1_swing_low'
-            else:
-                cands = [
-                    lv2['price'] for lv2 in h1_levels
-                    if lv2['side'] == 'BSL'
-                    and lv2['price'] > fvg_mid
-                    and min_rr <= abs(lv2['price'] - fvg_mid) / sl_dist <= max_rr
-                ]
-                if cands:
-                    tp        = round(min(cands), 5)   # nearest valid level
-                    tp_source = 'H1_swing_high'
+            setup_key = f"{pair}_{direction}_{fvg_mid:.5f}_{h4_time.strftime('%Y%m%d%H')}"
+            if is_fired(setup_key, fired): continue
+            mark_fired(zone_key, fired); mark_fired(setup_key, fired)
 
-            if tp is None:
-                logger.info(
-                    f"sweep_fvg [{pair}]: Dropped — no H1 level in "
-                    f"{min_rr}–{max_rr}R window "
-                    f"| entry={fvg_mid} sl_dist={round(sl_dist, 5)}"
-                )
-                continue
+            now_str      = latest_time.strftime('%Y-%m-%d %H:%M UTC')
+            sweep_ts_str = h4_time.strftime('%Y-%m-%d %H:%M UTC')
+            session      = get_session(latest_time.hour) or 'London'
+            pending_key  = setup_key
 
-            # ── RR confirmation ───────────────────────────────────────────
-            rr = abs(tp - fvg_mid) / sl_dist
-            if not (min_rr <= rr <= max_rr):
-                continue
-
-            # ── Persistent dedup ──────────────────────────────────────────
-            # TWO keys checked:
-            #
-            # 1. level_key — locks the liquidity level itself for the session.
-            #    Prevents re-fire when a second candle also wicks above the same
-            #    level within SWEEP_MAX_AGE_M15, or when ATR shifts slightly on
-            #    XAUUSD causing sl_val to change across cron runs.
-            #    Format: pair_source_levelPrice — no sl_val, no sweep_ts.
-            #
-            # 2. setup_key — locks the specific FVG entry computed from this sweep.
-            #    Includes sweep_ts + fvg_mid so genuinely different sweeps of the
-            #    same level on different days are still allowed.
-            sweep_ts  = candle['time'].strftime('%Y%m%d%H%M')
-            lv_price_str = f"{lv['price']:.5f}"
-            level_key = f"LVL_{pair}_{lv['source']}_{lv_price_str}"
-            setup_key = f"{pair}_{direction}_{fvg_mid}_{sweep_ts}"
-
-            if is_already_fired(level_key, fired):
-                logger.info(f"sweep_fvg [{pair}]: Level already consumed — {level_key}")
-                continue
-            if is_already_fired(setup_key, fired):
-                logger.info(f"sweep_fvg [{pair}]: Setup duplicate suppressed — {setup_key}")
-                continue
-
-            mark_as_fired(level_key, fired)
-            mark_as_fired(setup_key, fired)
-
-            # ── Signal confirmed ──────────────────────────────────────────
-            setup = {
-                'pair':       pair,
-                'direction':  direction,
-                'entry':      fvg_mid,
-                'sl':         sl_val,
-                'tp':         tp,
-                'rr':         round(rr, 2),
-                'session':    current_session,
-                'lv_source':  lv['source'],
-                'tp_source':  tp_source,
-                'sweep_time': candle['time'].strftime('%Y-%m-%d %H:%M UTC'),
-                'fired_at':   latest_time.strftime('%Y-%m-%d %H:%M UTC'),
-                'h1_bias':    '',   # reserved for future H4 bias filter
+            sig = {
+                'pair':        pair,
+                'direction':   direction,
+                'entry':       fvg_mid,
+                'sl':          sl_val,
+                'tp1':         tp1,
+                'tp2':         tp2,
+                'rr_tp1':      round(TP1_RR, 2),
+                'rr_tp2':      rr2,
+                'sl_pips':     round(sl_dist / pip, 1),
+                'session':     session,
+                'zone_src':    f"{zone['side']}_{zone['touches']}touch",
+                'fired_at':    now_str,
+                'sweep_time':  sweep_ts_str,
+                'pending_key': pending_key,
+                'fvg_top':     fvg_top,
+                'fvg_bottom':  fvg_bottom,
             }
 
-            signal = format_signal(setup)
-            signals_fired.append(signal)
-
-            # ── Write to live state for outcome tracking ──────────────────
-            live_state = load_sweep_live()
-            live_key   = f"{pair}_{sweep_ts}"
-            live_state[live_key] = {
-                'pair':      pair,
-                'direction': direction,
-                'side':      'SELL' if direction == 'short' else 'BUY',
-                'entry':     fvg_mid,
-                'sl':        sl_val,
-                'tp':        tp,
-                'fired_at':  latest_time.strftime('%Y-%m-%d %H:%M UTC'),
-                'outcome':   '',
+            # Save to pending state (stage 1 → 2 bridge)
+            pending[pending_key] = {
+                **sig,
+                'status':     'PENDING_ENTRY',
+                'created_at': now_str,
             }
-            save_sweep_live(live_state)
 
+            sig['message'] = format_pending_message(sig)
+            signals.append(sig)
             logger.info(
-                f"sweep_fvg [{pair}]: ✅ Signal | {direction.upper()} "
-                f"entry={fvg_mid} sl={sl_val} tp={tp} rr=1:{rr:.1f} "
-                f"sweep={lv['source']} tp={tp_source} session={current_session}"
+                f"[{pair}] ✅ Stage 1 | {direction.upper()} entry={fvg_mid} "
+                f"sl={sl_val} tp1={tp1} tp2={tp2} rr=1:{rr2}"
             )
 
-    save_fired_signals(fired)
-    return signals_fired
+    save_fired(fired)
+    save_pending(pending)
+    return signals
 
 
-# ── STANDALONE TEST ────────────────────────────────────────────────────────
-if __name__ == '__main__':
-    import csv
-    logging.basicConfig(level=logging.INFO)
+# ── STAGE 2: check_pending_entries() ─────────────────────────────────────────
+def check_pending_entries(m15_candles, pair):
+    """
+    Called every 15min after scan().
+    Monitors PENDING_ENTRY signals for this pair.
+    When price retraces into FVG → writes to live state, returns entry signals.
+    """
+    pending   = load_pending()
+    live      = load_live()
+    pip       = get_pip(pair)
+    triggered = []
 
-    print("Loading candles for standalone test...")
-    candles = []
-    with open('../EURUSD15.csv', newline='') as f:
-        reader = csv.reader(f, delimiter='\t')
-        for row in reader:
-            candles.append({
-                'time':   datetime.strptime(row[0].strip(), '%Y-%m-%d %H:%M').replace(tzinfo=timezone.utc),
-                'open':   float(row[1]),
-                'high':   float(row[2]),
-                'low':    float(row[3]),
-                'close':  float(row[4]),
-                'volume': int(row[5]),
-            })
+    pair_pending = {k: v for k, v in pending.items()
+                    if v.get('pair') == pair and v.get('status') == 'PENDING_ENTRY'}
+    if not pair_pending: return []
 
-    test_candles = candles[-500:]
-    print(f"Scanning {len(test_candles)} candles...")
-    results = scan(m15_candles=test_candles, pair='EURUSD')
-    print(f"\nSignals found: {len(results)}")
-    for r in results:
-        print(
-            f"  {r['direction'].upper():5} | entry={r['entry']} sl={r['sl']} "
-            f"tp={r['tp']} rr=1:{r['rr']} | sweep={r['lv_source']} "
-            f"tp_src={r['tp_source']} | {r['session']}"
+    latest = m15_candles[-1]
+
+    for pk, sig in pair_pending.items():
+        fvg_top    = sig['fvg_top']
+        fvg_bottom = sig['fvg_bottom']
+        direction  = sig['direction']
+
+        # Retrace check
+        if direction == 'short':
+            triggered_entry = latest['high'] >= fvg_bottom and latest['low'] <= fvg_top
+            invalidated     = latest['low'] < fvg_bottom - 10 * pip
+        else:
+            triggered_entry = latest['low'] <= fvg_top and latest['high'] >= fvg_bottom
+            invalidated     = latest['high'] > fvg_top + 10 * pip
+
+        if invalidated:
+            pending[pk]['status'] = 'INVALIDATED'
+            logger.info(f"[{pair}] Pending invalidated — price broke through FVG")
+            continue
+
+        if not triggered_entry:
+            continue
+
+        # Entry confirmed
+        entry_time_str          = latest['time'].strftime('%Y-%m-%d %H:%M UTC')
+        pending[pk]['status']   = 'ACTIVE'
+        pending[pk]['entry_time'] = entry_time_str
+
+        # Write to live state — Replit monitoring begins
+        live[pk] = {
+            'pair':       sig['pair'],
+            'direction':  sig['direction'],
+            'entry':      sig['entry'],
+            'sl':         sig['sl'],
+            'tp1':        sig['tp1'],
+            'tp2':        sig['tp2'],
+            'rr_tp1':     sig['rr_tp1'],
+            'rr_tp2':     sig['rr_tp2'],
+            'sl_pips':    sig['sl_pips'],
+            'fired_at':   sig['fired_at'],
+            'entry_time': entry_time_str,
+            'tp1_hit':    False,
+            'status':     'ACTIVE',
+        }
+
+        sig['entry_message'] = format_entry_message(sig)
+        sig['entry_time']    = entry_time_str
+        triggered.append(sig)
+        logger.info(
+            f"[{pair}] ⚡ Stage 2 — Entry triggered | "
+            f"{direction.upper()} @ {sig['entry']} | {entry_time_str}"
         )
+
+    save_pending(pending)
+    save_live(live)
+    return triggered
+
+
+# ── PENDING CLEANUP ────────────────────────────────────────────────────────────
+def cleanup_expired_pending():
+    """Remove expired or resolved entries from pending state."""
+    pending = load_pending()
+    now     = datetime.now(timezone.utc)
+    drop    = []
+    for pk, sig in pending.items():
+        if sig.get('status') in ('ACTIVE', 'INVALIDATED'):
+            drop.append(pk)
+            continue
+        try:
+            created = datetime.fromisoformat(
+                sig.get('created_at', now.isoformat()).replace(' UTC', '+00:00')
+            )
+            if (now - created).total_seconds() / 3600 > SIGNAL_TTL_HOURS:
+                drop.append(pk)
+        except Exception:
+            drop.append(pk)
+    for pk in drop: pending.pop(pk, None)
+    if drop: logger.info(f"sweep_fvg: Cleaned {len(drop)} pending entries")
+    save_pending(pending)
+
 
 
 
