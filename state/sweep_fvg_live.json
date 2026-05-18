@@ -1,1 +1,17 @@
-{}
+{
+  "EURJPY_short_184.77486_2026051811": {
+    "pair": "EURJPY",
+    "direction": "short",
+    "entry": 184.77486,
+    "sl": 184.90835,
+    "tp1": 184.57462,
+    "tp2": 184.49905,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.07,
+    "sl_pips": 13.3,
+    "fired_at": "2026-05-18 14:45 UTC",
+    "entry_time": "2026-05-18 14:45 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  }
+}
