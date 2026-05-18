@@ -1,1 +1,24 @@
-{}
+{
+  "GBPAUD_short_1.86774_2026051819": {
+    "pair": "GBPAUD",
+    "direction": "short",
+    "entry": 1.86774,
+    "sl": 1.86933,
+    "tp1": 1.86536,
+    "tp2": 1.86409,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.3,
+    "sl_pips": 15.9,
+    "session": "London",
+    "zone_src": "BSL_2touch",
+    "fired_at": "2026-05-18 19:30 UTC",
+    "sweep_time": "2026-05-18 19:00 UTC",
+    "pending_key": "GBPAUD_short_1.86774_2026051819",
+    "fvg_top": 1.86828,
+    "fvg_bottom": 1.86721,
+    "status": "ACTIVE",
+    "created_at": "2026-05-18 19:30 UTC",
+    "entry_time": "2026-05-18 19:30 UTC",
+    "entry_message": "\u26a1 *GBPAUD \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `1.86774` \u2705\nStop Loss : `1.86933`\nTP1 (50%) : `1.86536`\nTP2 (50%) : `1.86409`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
+  }
+}
