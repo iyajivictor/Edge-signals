@@ -11,7 +11,7 @@
     "sl_pips": 4.9,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "USDJPY_long_158.74677_2026051803": {
@@ -26,7 +26,7 @@
     "sl_pips": 4.9,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "CADJPY_long_115.45332_2026051723": {
@@ -41,7 +41,7 @@
     "sl_pips": 3.9,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "CADJPY_long_115.45332_2026051803": {
@@ -56,7 +56,7 @@
     "sl_pips": 3.9,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "EURJPY_long_184.54314_2026051723": {
@@ -71,7 +71,7 @@
     "sl_pips": 5.3,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "EURJPY_long_184.54314_2026051803": {
@@ -86,7 +86,7 @@
     "sl_pips": 5.3,
     "fired_at": "2026-05-18 08:00 UTC",
     "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
