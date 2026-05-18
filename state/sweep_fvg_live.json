@@ -1,17 +1,1 @@
-{
-  "GBPJPY_long_211.48456_2026051807": {
-    "pair": "GBPJPY",
-    "direction": "long",
-    "entry": 211.48456,
-    "sl": 211.41912,
-    "tp1": 211.58272,
-    "tp2": 211.65417,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.59,
-    "sl_pips": 6.5,
-    "fired_at": "2026-05-18 09:15 UTC",
-    "entry_time": "2026-05-18 09:15 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  }
-}
+{}
