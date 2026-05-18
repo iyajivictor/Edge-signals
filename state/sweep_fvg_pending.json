@@ -1,24 +1,22 @@
 {
-  "EURJPY_short_184.77486_2026051811": {
-    "pair": "EURJPY",
-    "direction": "short",
-    "entry": 184.77486,
-    "sl": 184.90835,
-    "tp1": 184.57462,
-    "tp2": 184.49905,
+  "GBPAUD_long_1.86685_2026051815": {
+    "pair": "GBPAUD",
+    "direction": "long",
+    "entry": 1.86685,
+    "sl": 1.86617,
+    "tp1": 1.86787,
+    "tp2": 1.86834,
     "rr_tp1": 1.5,
-    "rr_tp2": 2.07,
-    "sl_pips": 13.3,
+    "rr_tp2": 2.19,
+    "sl_pips": 6.8,
     "session": "NewYork",
-    "zone_src": "BSL_8touch",
-    "fired_at": "2026-05-18 14:45 UTC",
-    "sweep_time": "2026-05-18 11:00 UTC",
-    "pending_key": "EURJPY_short_184.77486_2026051811",
-    "fvg_top": 184.78537,
-    "fvg_bottom": 184.76434,
-    "status": "ACTIVE",
-    "created_at": "2026-05-18 14:45 UTC",
-    "entry_time": "2026-05-18 14:45 UTC",
-    "entry_message": "\u26a1 *EURJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `184.775` \u2705\nStop Loss : `184.908`\nTP1 (50%) : `184.575`\nTP2 (50%) : `184.499`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
+    "zone_src": "SSL_2touch",
+    "fired_at": "2026-05-18 15:00 UTC",
+    "sweep_time": "2026-05-18 15:00 UTC",
+    "pending_key": "GBPAUD_long_1.86685_2026051815",
+    "fvg_top": 1.86694,
+    "fvg_bottom": 1.86675,
+    "status": "INVALIDATED",
+    "created_at": "2026-05-18 15:00 UTC"
   }
 }
