@@ -1,1 +1,17 @@
-{}
+{
+  "USDJPY_short_158.92733_2026051815": {
+    "pair": "USDJPY",
+    "direction": "short",
+    "entry": 158.92733,
+    "sl": 158.98415,
+    "tp1": 158.8421,
+    "tp2": 158.72768,
+    "rr_tp1": 1.5,
+    "rr_tp2": 3.51,
+    "sl_pips": 5.7,
+    "fired_at": "2026-05-18 16:15 UTC",
+    "entry_time": "2026-05-18 16:15 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  }
+}
