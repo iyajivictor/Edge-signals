@@ -76,7 +76,8 @@ MIN_RR          = 2.0
 MAX_RR          = 6.0
 H4_SWING_N      = 3
 H4_TP_LOOKBACK  = 40
-SIGNAL_TTL_HOURS = 12
+SIGNAL_TTL_HOURS  = 4    # signal expires after 4h — prevents stale overnight delivery
+MAX_SWEEP_AGE_H4  = 2    # drop pending if H4 sweep was more than 2 H4 bars ago (~8h)
 
 XAUUSD_CONFIG = {'atr_period': 14, 'atr_buf_mult': 0.25, 'atr_floor_mult': 0.50}
 
@@ -323,8 +324,18 @@ def scan(m15_candles, h1_candles=None, h4_candles=None, pair='EURUSD'):
             if direction == 'short' and not is_bsl_sweep(h4c, zone): continue
             if direction == 'long'  and not is_ssl_sweep(h4c, zone): continue
 
-            zone_key  = f"LVL_{pair}_{zone['side']}_{zone['top']:.5f}_{h4_time.strftime('%Y%m%d%H')}"
+            # Zone dedup — one signal per zone per calendar day
+            # Daily lock prevents same zone firing on consecutive H4 boundaries
+            zone_key  = f"LVL_{pair}_{zone['side']}_{zone['top']:.5f}_{h4_time.strftime('%Y%m%d')}"
             if is_fired(zone_key, fired): continue
+
+            # Staleness check — drop if H4 sweep is too old
+            # Prevents overnight signals being delivered hours later
+            now_utc   = latest_time
+            sweep_age = (now_utc - h4_time).total_seconds() / 3600
+            if sweep_age > MAX_SWEEP_AGE_H4 * 4:   # MAX_SWEEP_AGE_H4 H4 bars × 4h
+                logger.info(f"[{pair}] Stale sweep ({sweep_age:.1f}h old) — skipping")
+                continue
 
             # Find FVG in M15 aftermath
             sweep_fvg = None
@@ -426,6 +437,18 @@ def check_pending_entries(m15_candles, pair):
         fvg_bottom = sig['fvg_bottom']
         direction  = sig['direction']
 
+        # Staleness check — drop if created more than SIGNAL_TTL_HOURS ago
+        try:
+            created = datetime.fromisoformat(
+                sig.get('created_at', '').replace(' UTC', '+00:00'))
+            age_h = (datetime.now(timezone.utc) - created).total_seconds() / 3600
+            if age_h > SIGNAL_TTL_HOURS:
+                pending[pk]['status'] = 'INVALIDATED'
+                logger.info(f"[{pair}] Pending expired ({age_h:.1f}h old) — dropping")
+                continue
+        except Exception:
+            pass
+
         # Retrace check
         if direction == 'short':
             triggered_entry = latest['high'] >= fvg_bottom and latest['low'] <= fvg_top
@@ -481,20 +504,4 @@ def check_pending_entries(m15_candles, pair):
 def cleanup_expired_pending():
     """Remove expired or resolved entries from pending state."""
     pending = load_pending()
-    now     = datetime.now(timezone.utc)
-    drop    = []
-    for pk, sig in pending.items():
-        if sig.get('status') in ('ACTIVE', 'INVALIDATED'):
-            drop.append(pk)
-            continue
-        try:
-            created = datetime.fromisoformat(
-                sig.get('created_at', now.isoformat()).replace(' UTC', '+00:00')
-            )
-            if (now - created).total_seconds() / 3600 > SIGNAL_TTL_HOURS:
-                drop.append(pk)
-        except Exception:
-            drop.append(pk)
-    for pk in drop: pending.pop(pk, None)
-    if drop: logger.info(f"sweep_fvg: Cleaned {len(drop)} pending entries")
-    save_pending(pending)
+    now     = datetime.
