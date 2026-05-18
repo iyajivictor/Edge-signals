@@ -1,1 +1,24 @@
-{}
+{
+  "EURJPY_long_184.51664_2026051811": {
+    "pair": "EURJPY",
+    "direction": "long",
+    "entry": 184.51664,
+    "sl": 184.44574,
+    "tp1": 184.62299,
+    "tp2": 184.88455,
+    "rr_tp1": 1.5,
+    "rr_tp2": 5.19,
+    "sl_pips": 7.1,
+    "session": "London",
+    "zone_src": "SSL_2touch",
+    "fired_at": "2026-05-18 11:00 UTC",
+    "sweep_time": "2026-05-18 11:00 UTC",
+    "pending_key": "EURJPY_long_184.51664_2026051811",
+    "fvg_top": 184.52632,
+    "fvg_bottom": 184.50697,
+    "status": "ACTIVE",
+    "created_at": "2026-05-18 11:00 UTC",
+    "entry_time": "2026-05-18 11:00 UTC",
+    "entry_message": "\u26a1 *EURJPY \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `184.517` \u2705\nStop Loss : `184.446`\nTP1 (50%) : `184.623`\nTP2 (50%) : `184.885`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
+  }
+}
