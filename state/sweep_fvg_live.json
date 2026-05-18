@@ -43,5 +43,20 @@
     "entry_time": "2026-05-18 16:30 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "EURJPY_long_184.83084_2026051815": {
+    "pair": "EURJPY",
+    "direction": "long",
+    "entry": 184.83084,
+    "sl": 184.72685,
+    "tp1": 184.98682,
+    "tp2": 185.05692,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.17,
+    "sl_pips": 10.4,
+    "fired_at": "2026-05-18 16:45 UTC",
+    "entry_time": "2026-05-18 16:45 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
