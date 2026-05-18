@@ -58,5 +58,20 @@
     "entry_time": "2026-05-18 16:45 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "USDCAD_long_1.37439_2026051815": {
+    "pair": "USDCAD",
+    "direction": "long",
+    "entry": 1.37439,
+    "sl": 1.37383,
+    "tp1": 1.37523,
+    "tp2": 1.37568,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.3,
+    "sl_pips": 5.6,
+    "fired_at": "2026-05-18 18:00 UTC",
+    "entry_time": "2026-05-18 18:00 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
