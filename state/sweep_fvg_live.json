@@ -29,66 +29,6 @@
     "tp1_hit": true,
     "status": "ACTIVE"
   },
-  "CADJPY_long_115.45332_2026051723": {
-    "pair": "CADJPY",
-    "direction": "long",
-    "entry": 115.45332,
-    "sl": 115.4147,
-    "tp1": 115.51125,
-    "tp2": 115.56338,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.85,
-    "sl_pips": 3.9,
-    "fired_at": "2026-05-18 08:00 UTC",
-    "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
-  "CADJPY_long_115.45332_2026051803": {
-    "pair": "CADJPY",
-    "direction": "long",
-    "entry": 115.45332,
-    "sl": 115.4147,
-    "tp1": 115.51125,
-    "tp2": 115.55033,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.51,
-    "sl_pips": 3.9,
-    "fired_at": "2026-05-18 08:00 UTC",
-    "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
-  "EURJPY_long_184.54314_2026051723": {
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 184.54314,
-    "sl": 184.48992,
-    "tp1": 184.62297,
-    "tp2": 184.85859,
-    "rr_tp1": 1.5,
-    "rr_tp2": 5.93,
-    "sl_pips": 5.3,
-    "fired_at": "2026-05-18 08:00 UTC",
-    "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
-  "EURJPY_long_184.54314_2026051803": {
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 184.54314,
-    "sl": 184.48992,
-    "tp1": 184.62297,
-    "tp2": 184.85859,
-    "rr_tp1": 1.5,
-    "rr_tp2": 5.93,
-    "sl_pips": 5.3,
-    "fired_at": "2026-05-18 08:00 UTC",
-    "entry_time": "2026-05-18 08:00 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
   "EURJPY_long_184.53822_2026051807": {
     "pair": "EURJPY",
     "direction": "long",
@@ -101,7 +41,7 @@
     "sl_pips": 12.5,
     "fired_at": "2026-05-18 08:15 UTC",
     "entry_time": "2026-05-18 08:15 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
