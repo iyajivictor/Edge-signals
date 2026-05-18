@@ -13,5 +13,35 @@
     "entry_time": "2026-05-18 16:15 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "AUDJPY_long_113.42263_2026051815": {
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.42263,
+    "sl": 113.30561,
+    "tp1": 113.59816,
+    "tp2": 113.6786,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.19,
+    "sl_pips": 11.7,
+    "fired_at": "2026-05-18 16:30 UTC",
+    "entry_time": "2026-05-18 16:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  },
+  "USDCAD_short_1.37494_2026051815": {
+    "pair": "USDCAD",
+    "direction": "short",
+    "entry": 1.37494,
+    "sl": 1.37557,
+    "tp1": 1.374,
+    "tp2": 1.37353,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.24,
+    "sl_pips": 6.3,
+    "fired_at": "2026-05-18 16:30 UTC",
+    "entry_time": "2026-05-18 16:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
