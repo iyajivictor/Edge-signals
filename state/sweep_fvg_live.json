@@ -13,5 +13,20 @@
     "entry_time": "2026-05-20 00:15 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "GBPUSD_long_1.34047_2026051923": {
+    "pair": "GBPUSD",
+    "direction": "long",
+    "entry": 1.34047,
+    "sl": 1.33949,
+    "tp1": 1.34194,
+    "tp2": 1.3439,
+    "rr_tp1": 1.5,
+    "rr_tp2": 3.5,
+    "sl_pips": 9.8,
+    "fired_at": "2026-05-20 06:00 UTC",
+    "entry_time": "2026-05-20 06:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
