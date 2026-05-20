@@ -16,7 +16,7 @@
     "pending_key": "USDJPY_short_159.13417_2026051923",
     "fvg_top": 159.15252,
     "fvg_bottom": 159.11583,
-    "status": "PENDING_ENTRY",
+    "status": "INVALIDATED",
     "created_at": "2026-05-20 06:00 UTC"
   },
   "CADJPY_short_115.57887_2026051923": {
