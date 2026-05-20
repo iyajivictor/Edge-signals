@@ -1,22 +1,24 @@
 {
-  "CADJPY_short_115.57887_2026051923": {
-    "pair": "CADJPY",
-    "direction": "short",
-    "entry": 115.57887,
-    "sl": 115.67206,
-    "tp1": 115.43908,
-    "tp2": 115.37873,
+  "USDCAD_long_1.37462_2026052007": {
+    "pair": "USDCAD",
+    "direction": "long",
+    "entry": 1.37462,
+    "sl": 1.37402,
+    "tp1": 1.37552,
+    "tp2": 1.37605,
     "rr_tp1": 1.5,
-    "rr_tp2": 2.15,
-    "sl_pips": 9.3,
+    "rr_tp2": 2.38,
+    "sl_pips": 6.0,
     "session": "London",
-    "zone_src": "BSL_14touch",
-    "fired_at": "2026-05-20 06:00 UTC",
-    "sweep_time": "2026-05-19 23:00 UTC",
-    "pending_key": "CADJPY_short_115.57887_2026051923",
-    "fvg_top": 115.59922,
-    "fvg_bottom": 115.55851,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-20 06:00 UTC"
+    "zone_src": "SSL_14touch",
+    "fired_at": "2026-05-20 10:00 UTC",
+    "sweep_time": "2026-05-20 07:00 UTC",
+    "pending_key": "USDCAD_long_1.37462_2026052007",
+    "fvg_top": 1.37481,
+    "fvg_bottom": 1.37443,
+    "status": "ACTIVE",
+    "created_at": "2026-05-20 10:00 UTC",
+    "entry_time": "2026-05-20 10:00 UTC",
+    "entry_message": "\u26a1 *USDCAD \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `1.37462` \u2705\nStop Loss : `1.37402`\nTP1 (50%) : `1.37552`\nTP2 (50%) : `1.37605`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
