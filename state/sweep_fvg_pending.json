@@ -38,5 +38,25 @@
     "fvg_bottom": 1.37458,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-20 10:15 UTC"
+  },
+  "USDCAD_long_1.37462_2026052007": {
+    "pair": "USDCAD",
+    "direction": "long",
+    "entry": 1.37462,
+    "sl": 1.37402,
+    "tp1": 1.37552,
+    "tp2": 1.37605,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.38,
+    "sl_pips": 6.0,
+    "session": "London",
+    "zone_src": "SSL_14touch",
+    "fired_at": "2026-05-20 10:15 UTC",
+    "sweep_time": "2026-05-20 07:00 UTC",
+    "pending_key": "USDCAD_long_1.37462_2026052007",
+    "fvg_top": 1.37481,
+    "fvg_bottom": 1.37443,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-20 10:15 UTC"
   }
 }
