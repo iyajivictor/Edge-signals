@@ -1,24 +1,4 @@
 {
-  "USDJPY_short_159.13417_2026051923": {
-    "pair": "USDJPY",
-    "direction": "short",
-    "entry": 159.13417,
-    "sl": 159.25254,
-    "tp1": 158.95661,
-    "tp2": 158.79136,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.9,
-    "sl_pips": 11.8,
-    "session": "London",
-    "zone_src": "BSL_8touch",
-    "fired_at": "2026-05-20 06:00 UTC",
-    "sweep_time": "2026-05-19 23:00 UTC",
-    "pending_key": "USDJPY_short_159.13417_2026051923",
-    "fvg_top": 159.15252,
-    "fvg_bottom": 159.11583,
-    "status": "INVALIDATED",
-    "created_at": "2026-05-20 06:00 UTC"
-  },
   "CADJPY_short_115.57887_2026051923": {
     "pair": "CADJPY",
     "direction": "short",
