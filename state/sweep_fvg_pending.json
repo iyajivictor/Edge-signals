@@ -1,26 +1,4 @@
 {
-  "GBPUSD_long_1.34047_2026051923": {
-    "pair": "GBPUSD",
-    "direction": "long",
-    "entry": 1.34047,
-    "sl": 1.33949,
-    "tp1": 1.34194,
-    "tp2": 1.3439,
-    "rr_tp1": 1.5,
-    "rr_tp2": 3.5,
-    "sl_pips": 9.8,
-    "session": "London",
-    "zone_src": "SSL_2touch",
-    "fired_at": "2026-05-20 06:00 UTC",
-    "sweep_time": "2026-05-19 23:00 UTC",
-    "pending_key": "GBPUSD_long_1.34047_2026051923",
-    "fvg_top": 1.3408,
-    "fvg_bottom": 1.34014,
-    "status": "ACTIVE",
-    "created_at": "2026-05-20 06:00 UTC",
-    "entry_time": "2026-05-20 06:30 UTC",
-    "entry_message": "\u26a1 *GBPUSD \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `1.34047` \u2705\nStop Loss : `1.33949`\nTP1 (50%) : `1.34194`\nTP2 (50%) : `1.34390`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
-  },
   "USDJPY_short_159.13417_2026051923": {
     "pair": "USDJPY",
     "direction": "short",
