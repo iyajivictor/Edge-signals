@@ -19,28 +19,5 @@
     "fvg_bottom": 1.88548,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-21 19:45 UTC"
-  },
-  "USDJPY_long_158.96747_2026052119": {
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.96747,
-    "sl": 158.90473,
-    "tp1": 159.06158,
-    "tp2": 159.12201,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.46,
-    "sl_pips": 6.3,
-    "session": "London",
-    "zone_src": "SSL_3touch",
-    "fired_at": "2026-05-21 20:00 UTC",
-    "sweep_time": "2026-05-21 19:15 UTC",
-    "fvg_formed_at": "2026-05-21 20:00 UTC",
-    "pending_key": "USDJPY_long_158.96747_2026052119",
-    "fvg_top": 158.97526,
-    "fvg_bottom": 158.95967,
-    "status": "ACTIVE",
-    "created_at": "2026-05-21 20:00 UTC",
-    "entry_time": "2026-05-21 20:00 UTC",
-    "entry_message": "\u26a1 *USDJPY \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `158.967` \u2705\nStop Loss : `158.905`\nTP1 (50%) : `159.062`\nTP2 (50%) : `159.122`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
