@@ -1,25 +1,25 @@
 {
-  "EURJPY_short_184.68300_2026052115": {
+  "EURJPY_short_184.84420_2026052119": {
     "pair": "EURJPY",
     "direction": "short",
-    "entry": 184.683,
-    "sl": 184.86464,
-    "tp1": 184.41054,
-    "tp2": 184.28129,
+    "entry": 184.8442,
+    "sl": 184.95681,
+    "tp1": 184.67529,
+    "tp2": 184.57829,
     "rr_tp1": 1.5,
-    "rr_tp2": 2.21,
-    "sl_pips": 18.2,
+    "rr_tp2": 2.36,
+    "sl_pips": 11.3,
     "session": "London",
     "zone_src": "BSL_7touch",
-    "fired_at": "2026-05-21 18:30 UTC",
-    "sweep_time": "2026-05-21 18:30 UTC",
-    "fvg_formed_at": "2026-05-21 17:30 UTC",
-    "pending_key": "EURJPY_short_184.68300_2026052115",
-    "fvg_top": 184.78908,
-    "fvg_bottom": 184.57692,
+    "fired_at": "2026-05-21 19:00 UTC",
+    "sweep_time": "2026-05-21 19:00 UTC",
+    "fvg_formed_at": "2026-05-21 19:00 UTC",
+    "pending_key": "EURJPY_short_184.84420_2026052119",
+    "fvg_top": 184.88492,
+    "fvg_bottom": 184.80348,
     "status": "ACTIVE",
-    "created_at": "2026-05-21 18:30 UTC",
-    "entry_time": "2026-05-21 18:45 UTC",
-    "entry_message": "\u26a1 *EURJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `184.683` \u2705\nStop Loss : `184.865`\nTP1 (50%) : `184.411`\nTP2 (50%) : `184.281`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
+    "created_at": "2026-05-21 19:00 UTC",
+    "entry_time": "2026-05-21 19:00 UTC",
+    "entry_message": "\u26a1 *EURJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `184.844` \u2705\nStop Loss : `184.957`\nTP1 (50%) : `184.675`\nTP2 (50%) : `184.578`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
