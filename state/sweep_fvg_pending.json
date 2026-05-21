@@ -1,1 +1,25 @@
-{}
+{
+  "CADJPY_short_115.56051_2026052115": {
+    "pair": "CADJPY",
+    "direction": "short",
+    "entry": 115.56051,
+    "sl": 115.59454,
+    "tp1": 115.50946,
+    "tp2": 115.46935,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.68,
+    "sl_pips": 3.4,
+    "session": "London",
+    "zone_src": "BSL_6touch",
+    "fired_at": "2026-05-21 17:15 UTC",
+    "sweep_time": "2026-05-21 16:15 UTC",
+    "fvg_formed_at": "2026-05-21 17:15 UTC",
+    "pending_key": "CADJPY_short_115.56051_2026052115",
+    "fvg_top": 115.56825,
+    "fvg_bottom": 115.55276,
+    "status": "ACTIVE",
+    "created_at": "2026-05-21 17:15 UTC",
+    "entry_time": "2026-05-21 17:15 UTC",
+    "entry_message": "\u26a1 *CADJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `115.561` \u2705\nStop Loss : `115.595`\nTP1 (50%) : `115.509`\nTP2 (50%) : `115.469`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
+  }
+}

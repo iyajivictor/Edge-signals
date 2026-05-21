@@ -13,5 +13,20 @@
     "entry_time": "2026-05-21 12:00 UTC",
     "tp1_hit": true,
     "status": "ACTIVE"
+  },
+  "CADJPY_short_115.56051_2026052115": {
+    "pair": "CADJPY",
+    "direction": "short",
+    "entry": 115.56051,
+    "sl": 115.59454,
+    "tp1": 115.50946,
+    "tp2": 115.46935,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.68,
+    "sl_pips": 3.4,
+    "fired_at": "2026-05-21 17:15 UTC",
+    "entry_time": "2026-05-21 17:15 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
