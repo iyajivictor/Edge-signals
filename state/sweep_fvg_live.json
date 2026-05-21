@@ -73,5 +73,20 @@
     "entry_time": "2026-05-21 20:00 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "GBPUSD_short_1.34363_2026052119": {
+    "pair": "GBPUSD",
+    "direction": "short",
+    "entry": 1.34363,
+    "sl": 1.34455,
+    "tp1": 1.34225,
+    "tp2": 1.33951,
+    "rr_tp1": 1.5,
+    "rr_tp2": 4.48,
+    "sl_pips": 9.2,
+    "fired_at": "2026-05-21 20:30 UTC",
+    "entry_time": "2026-05-21 20:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
