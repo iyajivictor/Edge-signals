@@ -28,5 +28,35 @@
     "entry_time": "2026-05-21 11:45 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "EURUSD_short_1.16296_2026052111": {
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.16296,
+    "sl": 1.16362,
+    "tp1": 1.16197,
+    "tp2": 1.16113,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.77,
+    "sl_pips": 6.6,
+    "fired_at": "2026-05-21 12:00 UTC",
+    "entry_time": "2026-05-21 12:00 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  },
+  "GBPUSD_short_1.34387_2026052111": {
+    "pair": "GBPUSD",
+    "direction": "short",
+    "entry": 1.34387,
+    "sl": 1.3447,
+    "tp1": 1.34262,
+    "tp2": 1.33951,
+    "rr_tp1": 1.5,
+    "rr_tp2": 5.25,
+    "sl_pips": 8.3,
+    "fired_at": "2026-05-21 12:00 UTC",
+    "entry_time": "2026-05-21 12:00 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
