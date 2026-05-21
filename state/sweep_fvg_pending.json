@@ -1,1 +1,23 @@
-{}
+{
+  "XAUUSD_long_4527.99154_2026052115": {
+    "pair": "XAUUSD",
+    "direction": "long",
+    "entry": 4527.99154,
+    "sl": 4519.23173,
+    "tp1": 4541.13125,
+    "tp2": 4551.24704,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.65,
+    "sl_pips": 87.6,
+    "session": "NewYork",
+    "zone_src": "SSL_23touch",
+    "fired_at": "2026-05-21 16:00 UTC",
+    "sweep_time": "2026-05-21 15:30 UTC",
+    "fvg_formed_at": "2026-05-21 16:00 UTC",
+    "pending_key": "XAUUSD_long_4527.99154_2026052115",
+    "fvg_top": 4528.57531,
+    "fvg_bottom": 4527.40778,
+    "status": "INVALIDATED",
+    "created_at": "2026-05-21 16:00 UTC"
+  }
+}
