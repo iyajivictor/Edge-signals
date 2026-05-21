@@ -14,21 +14,6 @@
     "tp1_hit": true,
     "status": "ACTIVE"
   },
-  "CADJPY_short_115.56051_2026052115": {
-    "pair": "CADJPY",
-    "direction": "short",
-    "entry": 115.56051,
-    "sl": 115.59454,
-    "tp1": 115.50946,
-    "tp2": 115.46935,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.68,
-    "sl_pips": 3.4,
-    "fired_at": "2026-05-21 17:15 UTC",
-    "entry_time": "2026-05-21 17:15 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
   "GBPUSD_short_1.34286_2026052115": {
     "pair": "GBPUSD",
     "direction": "short",
@@ -59,21 +44,6 @@
     "tp1_hit": false,
     "status": "ACTIVE"
   },
-  "GBPAUD_short_1.88760_2026052115": {
-    "pair": "GBPAUD",
-    "direction": "short",
-    "entry": 1.8876,
-    "sl": 1.8894,
-    "tp1": 1.8849,
-    "tp2": 1.88102,
-    "rr_tp1": 1.5,
-    "rr_tp2": 3.66,
-    "sl_pips": 18.0,
-    "fired_at": "2026-05-21 17:30 UTC",
-    "entry_time": "2026-05-21 17:30 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
   "AUDJPY_long_113.17140_2026052115": {
     "pair": "AUDJPY",
     "direction": "long",
@@ -86,7 +56,7 @@
     "sl_pips": 11.8,
     "fired_at": "2026-05-21 18:00 UTC",
     "entry_time": "2026-05-21 18:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
