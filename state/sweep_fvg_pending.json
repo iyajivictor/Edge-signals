@@ -19,5 +19,28 @@
     "fvg_bottom": 1.88548,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-21 19:45 UTC"
+  },
+  "AUDJPY_long_113.37414_2026052119": {
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.37414,
+    "sl": 113.23631,
+    "tp1": 113.58088,
+    "tp2": 113.67994,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.22,
+    "sl_pips": 13.8,
+    "session": "London",
+    "zone_src": "SSL_14touch",
+    "fired_at": "2026-05-21 21:00 UTC",
+    "sweep_time": "2026-05-21 20:15 UTC",
+    "fvg_formed_at": "2026-05-21 21:00 UTC",
+    "pending_key": "AUDJPY_long_113.37414_2026052119",
+    "fvg_top": 113.38253,
+    "fvg_bottom": 113.36576,
+    "status": "ACTIVE",
+    "created_at": "2026-05-21 21:00 UTC",
+    "entry_time": "2026-05-21 21:00 UTC",
+    "entry_message": "\u26a1 *AUDJPY \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `113.374` \u2705\nStop Loss : `113.236`\nTP1 (50%) : `113.581`\nTP2 (50%) : `113.680`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }

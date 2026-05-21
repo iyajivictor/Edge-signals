@@ -88,5 +88,20 @@
     "entry_time": "2026-05-21 20:30 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "AUDJPY_long_113.37414_2026052119": {
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.37414,
+    "sl": 113.23631,
+    "tp1": 113.58088,
+    "tp2": 113.67994,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.22,
+    "sl_pips": 13.8,
+    "fired_at": "2026-05-21 21:00 UTC",
+    "entry_time": "2026-05-21 21:00 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
