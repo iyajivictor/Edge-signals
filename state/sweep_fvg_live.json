@@ -1,19 +1,4 @@
 {
-  "EURJPY_long_184.77085_2026052111": {
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 184.77085,
-    "sl": 184.69347,
-    "tp1": 184.88692,
-    "tp2": 184.9305,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.06,
-    "sl_pips": 7.7,
-    "fired_at": "2026-05-21 11:15 UTC",
-    "entry_time": "2026-05-21 11:15 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  },
   "USDCAD_long_1.37494_2026052111": {
     "pair": "USDCAD",
     "direction": "long",
@@ -26,7 +11,7 @@
     "sl_pips": 5.0,
     "fired_at": "2026-05-21 11:45 UTC",
     "entry_time": "2026-05-21 11:45 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "EURUSD_short_1.16296_2026052111": {
@@ -41,7 +26,7 @@
     "sl_pips": 6.6,
     "fired_at": "2026-05-21 12:00 UTC",
     "entry_time": "2026-05-21 12:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "GBPUSD_short_1.34387_2026052111": {
@@ -56,7 +41,7 @@
     "sl_pips": 8.3,
     "fired_at": "2026-05-21 12:00 UTC",
     "entry_time": "2026-05-21 12:00 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
