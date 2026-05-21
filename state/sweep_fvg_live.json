@@ -1,34 +1,4 @@
 {
-  "EURUSD_long_1.16309_2026052111": {
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.16309,
-    "sl": 1.16244,
-    "tp1": 1.16406,
-    "tp2": 1.16461,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.34,
-    "sl_pips": 6.5,
-    "fired_at": "2026-05-21 11:15 UTC",
-    "entry_time": "2026-05-21 11:15 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  },
-  "AUDJPY_long_113.59570_2026052111": {
-    "pair": "AUDJPY",
-    "direction": "long",
-    "entry": 113.5957,
-    "sl": 113.50869,
-    "tp1": 113.72621,
-    "tp2": 113.85677,
-    "rr_tp1": 1.5,
-    "rr_tp2": 3.0,
-    "sl_pips": 8.7,
-    "fired_at": "2026-05-21 11:15 UTC",
-    "entry_time": "2026-05-21 11:15 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  },
   "EURJPY_long_184.77085_2026052111": {
     "pair": "EURJPY",
     "direction": "long",
