@@ -1,23 +1,25 @@
 {
-  "XAUUSD_long_4527.99154_2026052115": {
-    "pair": "XAUUSD",
+  "EURUSD_long_1.16240_2026052115": {
+    "pair": "EURUSD",
     "direction": "long",
-    "entry": 4527.99154,
-    "sl": 4519.23173,
-    "tp1": 4541.13125,
-    "tp2": 4551.24704,
+    "entry": 1.1624,
+    "sl": 1.16169,
+    "tp1": 1.16347,
+    "tp2": 1.16461,
     "rr_tp1": 1.5,
-    "rr_tp2": 2.65,
-    "sl_pips": 87.6,
+    "rr_tp2": 3.11,
+    "sl_pips": 7.1,
     "session": "NewYork",
-    "zone_src": "SSL_23touch",
-    "fired_at": "2026-05-21 16:00 UTC",
-    "sweep_time": "2026-05-21 15:30 UTC",
-    "fvg_formed_at": "2026-05-21 16:00 UTC",
-    "pending_key": "XAUUSD_long_4527.99154_2026052115",
-    "fvg_top": 4528.57531,
-    "fvg_bottom": 4527.40778,
-    "status": "INVALIDATED",
-    "created_at": "2026-05-21 16:00 UTC"
+    "zone_src": "SSL_7touch",
+    "fired_at": "2026-05-21 16:15 UTC",
+    "sweep_time": "2026-05-21 15:00 UTC",
+    "fvg_formed_at": "2026-05-21 16:15 UTC",
+    "pending_key": "EURUSD_long_1.16240_2026052115",
+    "fvg_top": 1.16253,
+    "fvg_bottom": 1.16226,
+    "status": "ACTIVE",
+    "created_at": "2026-05-21 16:15 UTC",
+    "entry_time": "2026-05-21 16:15 UTC",
+    "entry_message": "\u26a1 *EURUSD \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `1.16240` \u2705\nStop Loss : `1.16169`\nTP1 (50%) : `1.16347`\nTP2 (50%) : `1.16461`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
