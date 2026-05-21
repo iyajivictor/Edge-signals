@@ -28,5 +28,50 @@
     "entry_time": "2026-05-21 17:15 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "GBPUSD_short_1.34286_2026052115": {
+    "pair": "GBPUSD",
+    "direction": "short",
+    "entry": 1.34286,
+    "sl": 1.34412,
+    "tp1": 1.34097,
+    "tp2": 1.33951,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.66,
+    "sl_pips": 12.6,
+    "fired_at": "2026-05-21 17:30 UTC",
+    "entry_time": "2026-05-21 17:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  },
+  "GBPJPY_short_213.57097_2026052115": {
+    "pair": "GBPJPY",
+    "direction": "short",
+    "entry": 213.57097,
+    "sl": 213.74957,
+    "tp1": 213.30307,
+    "tp2": 213.11609,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.55,
+    "sl_pips": 17.9,
+    "fired_at": "2026-05-21 17:30 UTC",
+    "entry_time": "2026-05-21 17:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
+  },
+  "GBPAUD_short_1.88760_2026052115": {
+    "pair": "GBPAUD",
+    "direction": "short",
+    "entry": 1.8876,
+    "sl": 1.8894,
+    "tp1": 1.8849,
+    "tp2": 1.88102,
+    "rr_tp1": 1.5,
+    "rr_tp2": 3.66,
+    "sl_pips": 18.0,
+    "fired_at": "2026-05-21 17:30 UTC",
+    "entry_time": "2026-05-21 17:30 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
