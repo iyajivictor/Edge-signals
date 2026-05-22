@@ -29,21 +29,6 @@
     "tp1_hit": false,
     "status": "ACTIVE"
   },
-  "EURJPY_short_184.84420_2026052119": {
-    "pair": "EURJPY",
-    "direction": "short",
-    "entry": 184.8442,
-    "sl": 184.95681,
-    "tp1": 184.67529,
-    "tp2": 184.57829,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.36,
-    "sl_pips": 11.3,
-    "fired_at": "2026-05-21 19:00 UTC",
-    "entry_time": "2026-05-21 19:00 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
   "GBPUSD_short_1.34363_2026052119": {
     "pair": "GBPUSD",
     "direction": "short",
