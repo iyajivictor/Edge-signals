@@ -17,27 +17,6 @@
     "pending_key": "AUDJPY_short_113.56337_2026052215",
     "fvg_top": 113.58023,
     "fvg_bottom": 113.54651,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-22 16:31:39 UTC"
-  },
-  "XAUUSD_long_4517.44612_2026052215": {
-    "pair": "XAUUSD",
-    "direction": "long",
-    "entry": 4517.44612,
-    "sl": 4509.17175,
-    "tp1": 4529.85767,
-    "tp2": 4542.56382,
-    "rr_tp1": 1.5,
-    "rr_tp2": 3.04,
-    "sl_pips": 82.7,
-    "session": "NewYork",
-    "zone_src": "SSL_3touch",
-    "fired_at": "2026-05-22 16:30 UTC",
-    "sweep_time": "2026-05-22 15:45 UTC",
-    "fvg_formed_at": "2026-05-22 16:30 UTC",
-    "pending_key": "XAUUSD_long_4517.44612_2026052215",
-    "fvg_top": 4522.24395,
-    "fvg_bottom": 4512.64828,
     "status": "INVALIDATED",
     "created_at": "2026-05-22 16:31:39 UTC"
   },
@@ -59,7 +38,7 @@
     "pending_key": "GBPAUD_long_1.88084_2026052215",
     "fvg_top": 1.88097,
     "fvg_bottom": 1.8807,
-    "status": "PENDING_ENTRY",
+    "status": "INVALIDATED",
     "created_at": "2026-05-22 16:31:39 UTC"
   }
 }
