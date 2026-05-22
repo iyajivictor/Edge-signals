@@ -41,7 +41,7 @@
     "sl_pips": 4.3,
     "fired_at": "2026-05-22 18:15 UTC",
     "entry_time": "2026-05-22 18:30 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
