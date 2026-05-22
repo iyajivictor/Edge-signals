@@ -1,1 +1,23 @@
-{}
+{
+  "GBPUSD_long_1.34251_2026052215": {
+    "pair": "GBPUSD",
+    "direction": "long",
+    "entry": 1.34251,
+    "sl": 1.34208,
+    "tp1": 1.34316,
+    "tp2": 1.34362,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.58,
+    "sl_pips": 4.3,
+    "session": "London",
+    "zone_src": "SSL_5touch",
+    "fired_at": "2026-05-22 18:15 UTC",
+    "sweep_time": "2026-05-22 17:15 UTC",
+    "fvg_formed_at": "2026-05-22 18:15 UTC",
+    "pending_key": "GBPUSD_long_1.34251_2026052215",
+    "fvg_top": 1.3427,
+    "fvg_bottom": 1.34232,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-22 18:16:39 UTC"
+  }
+}
