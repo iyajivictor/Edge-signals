@@ -1,1 +1,44 @@
-{}
+{
+  "EURUSD_short_1.16041_2026052219": {
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.16041,
+    "sl": 1.16123,
+    "tp1": 1.15918,
+    "tp2": 1.15833,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.54,
+    "sl_pips": 8.2,
+    "session": "London",
+    "zone_src": "BSL_3touch",
+    "fired_at": "2026-05-22 19:15 UTC",
+    "sweep_time": "2026-05-22 19:00 UTC",
+    "fvg_formed_at": "2026-05-22 19:15 UTC",
+    "pending_key": "EURUSD_short_1.16041_2026052219",
+    "fvg_top": 1.16066,
+    "fvg_bottom": 1.16017,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-22 19:16:36 UTC"
+  },
+  "EURJPY_short_184.62676_2026052219": {
+    "pair": "EURJPY",
+    "direction": "short",
+    "entry": 184.62676,
+    "sl": 184.73481,
+    "tp1": 184.46468,
+    "tp2": 184.39701,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.13,
+    "sl_pips": 10.8,
+    "session": "London",
+    "zone_src": "BSL_16touch",
+    "fired_at": "2026-05-22 19:15 UTC",
+    "sweep_time": "2026-05-22 19:00 UTC",
+    "fvg_formed_at": "2026-05-22 19:15 UTC",
+    "pending_key": "EURJPY_short_184.62676_2026052219",
+    "fvg_top": 184.64233,
+    "fvg_bottom": 184.61119,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-22 19:16:36 UTC"
+  }
+}
