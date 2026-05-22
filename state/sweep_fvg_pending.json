@@ -59,7 +59,9 @@
     "pending_key": "GBPJPY_short_213.56301_2026052207",
     "fvg_top": 213.58649,
     "fvg_bottom": 213.53953,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-22 12:02:59 UTC"
+    "status": "ACTIVE",
+    "created_at": "2026-05-22 12:02:59 UTC",
+    "entry_time": "2026-05-22 12:15 UTC",
+    "entry_message": "\u26a1 *GBPJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `213.563` \u2705\nStop Loss : `213.629`\nTP1 (50%) : `213.464`\nTP2 (50%) : `213.398`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
