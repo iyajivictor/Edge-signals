@@ -1,1 +1,44 @@
-{}
+{
+  "EURUSD_short_1.16121_2026052215": {
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.16121,
+    "sl": 1.16179,
+    "tp1": 1.16034,
+    "tp2": 1.15926,
+    "rr_tp1": 1.5,
+    "rr_tp2": 3.36,
+    "sl_pips": 5.8,
+    "session": "NewYork",
+    "zone_src": "BSL_2touch",
+    "fired_at": "2026-05-22 16:00 UTC",
+    "sweep_time": "2026-05-22 15:00 UTC",
+    "fvg_formed_at": "2026-05-22 16:00 UTC",
+    "pending_key": "EURUSD_short_1.16121_2026052215",
+    "fvg_top": 1.16141,
+    "fvg_bottom": 1.16102,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-22 16:02:55 UTC"
+  },
+  "GBPJPY_short_213.63135_2026052215": {
+    "pair": "GBPJPY",
+    "direction": "short",
+    "entry": 213.63135,
+    "sl": 213.7025,
+    "tp1": 213.52463,
+    "tp2": 213.46036,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.4,
+    "sl_pips": 7.1,
+    "session": "NewYork",
+    "zone_src": "BSL_6touch",
+    "fired_at": "2026-05-22 16:00 UTC",
+    "sweep_time": "2026-05-22 15:00 UTC",
+    "fvg_formed_at": "2026-05-22 16:00 UTC",
+    "pending_key": "GBPJPY_short_213.63135_2026052215",
+    "fvg_top": 213.65048,
+    "fvg_bottom": 213.61221,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-22 16:02:55 UTC"
+  }
+}
