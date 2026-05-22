@@ -43,5 +43,20 @@
     "entry_time": "2026-05-22 19:30 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "GBPJPY_short_213.63135_2026052215": {
+    "pair": "GBPJPY",
+    "direction": "short",
+    "entry": 213.63135,
+    "sl": 213.7025,
+    "tp1": 213.52463,
+    "tp2": 213.46036,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.4,
+    "sl_pips": 7.1,
+    "fired_at": "2026-05-22 20:00 UTC",
+    "entry_time": "2026-05-22 20:15 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
