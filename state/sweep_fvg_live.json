@@ -1,19 +1,4 @@
 {
-  "GBPJPY_short_213.57097_2026052115": {
-    "pair": "GBPJPY",
-    "direction": "short",
-    "entry": 213.57097,
-    "sl": 213.74957,
-    "tp1": 213.30307,
-    "tp2": 213.11609,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.55,
-    "sl_pips": 17.9,
-    "fired_at": "2026-05-21 17:30 UTC",
-    "entry_time": "2026-05-21 17:30 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  },
   "EURJPY_short_184.68300_2026052115": {
     "pair": "EURJPY",
     "direction": "short",
@@ -26,36 +11,6 @@
     "sl_pips": 18.2,
     "fired_at": "2026-05-21 18:30 UTC",
     "entry_time": "2026-05-21 18:45 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  },
-  "GBPUSD_short_1.34363_2026052119": {
-    "pair": "GBPUSD",
-    "direction": "short",
-    "entry": 1.34363,
-    "sl": 1.34455,
-    "tp1": 1.34225,
-    "tp2": 1.33951,
-    "rr_tp1": 1.5,
-    "rr_tp2": 4.48,
-    "sl_pips": 9.2,
-    "fired_at": "2026-05-21 20:30 UTC",
-    "entry_time": "2026-05-21 20:30 UTC",
-    "tp1_hit": true,
-    "status": "ACTIVE"
-  },
-  "GBPJPY_short_213.56301_2026052207": {
-    "pair": "GBPJPY",
-    "direction": "short",
-    "entry": 213.56301,
-    "sl": 213.62888,
-    "tp1": 213.4642,
-    "tp2": 213.39797,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.51,
-    "sl_pips": 6.6,
-    "fired_at": "2026-05-22 12:00 UTC",
-    "entry_time": "2026-05-22 12:15 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
   }
