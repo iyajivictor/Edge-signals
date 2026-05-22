@@ -40,28 +40,5 @@
     "fvg_bottom": 158.95526,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-22 12:02:59 UTC"
-  },
-  "GBPJPY_short_213.56301_2026052207": {
-    "pair": "GBPJPY",
-    "direction": "short",
-    "entry": 213.56301,
-    "sl": 213.62888,
-    "tp1": 213.4642,
-    "tp2": 213.39797,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.51,
-    "sl_pips": 6.6,
-    "session": "London",
-    "zone_src": "BSL_7touch",
-    "fired_at": "2026-05-22 12:00 UTC",
-    "sweep_time": "2026-05-22 10:00 UTC",
-    "fvg_formed_at": "2026-05-22 07:00 UTC",
-    "pending_key": "GBPJPY_short_213.56301_2026052207",
-    "fvg_top": 213.58649,
-    "fvg_bottom": 213.53953,
-    "status": "ACTIVE",
-    "created_at": "2026-05-22 12:02:59 UTC",
-    "entry_time": "2026-05-22 12:15 UTC",
-    "entry_message": "\u26a1 *GBPJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `213.563` \u2705\nStop Loss : `213.629`\nTP1 (50%) : `213.464`\nTP2 (50%) : `213.398`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
