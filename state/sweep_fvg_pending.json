@@ -38,7 +38,9 @@
     "pending_key": "GBPAUD_short_1.88301_2026052515",
     "fvg_top": 1.88327,
     "fvg_bottom": 1.88275,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-25 18:46:34 UTC"
+    "status": "ACTIVE",
+    "created_at": "2026-05-25 18:46:34 UTC",
+    "entry_time": "2026-05-25 19:00 UTC",
+    "entry_message": "\u26a1 *GBPAUD \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `1.88301` \u2705\nStop Loss : `1.88354`\nTP1 (50%) : `1.88222`\nTP2 (50%) : `1.88187`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
