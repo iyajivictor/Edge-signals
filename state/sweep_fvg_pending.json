@@ -19,5 +19,26 @@
     "fvg_bottom": 1.16378,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-25 18:31:37 UTC"
+  },
+  "GBPAUD_short_1.88301_2026052515": {
+    "pair": "GBPAUD",
+    "direction": "short",
+    "entry": 1.88301,
+    "sl": 1.88354,
+    "tp1": 1.88222,
+    "tp2": 1.88187,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.15,
+    "sl_pips": 5.3,
+    "session": "London",
+    "zone_src": "BSL_4touch",
+    "fired_at": "2026-05-25 18:45 UTC",
+    "sweep_time": "2026-05-25 17:15 UTC",
+    "fvg_formed_at": "2026-05-25 18:45 UTC",
+    "pending_key": "GBPAUD_short_1.88301_2026052515",
+    "fvg_top": 1.88327,
+    "fvg_bottom": 1.88275,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-25 18:46:34 UTC"
   }
 }
