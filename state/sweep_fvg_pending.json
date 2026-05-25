@@ -1,1 +1,23 @@
-{}
+{
+  "XAUUSD_short_4561.94000_2026052515": {
+    "pair": "XAUUSD",
+    "direction": "short",
+    "entry": 4561.94,
+    "sl": 4567.65391,
+    "tp1": 4553.36913,
+    "tp2": 4528.85758,
+    "rr_tp1": 1.5,
+    "rr_tp2": 5.79,
+    "sl_pips": 57.1,
+    "session": "NewYork",
+    "zone_src": "BSL_3touch",
+    "fired_at": "2026-05-25 15:30 UTC",
+    "sweep_time": "2026-05-25 15:00 UTC",
+    "fvg_formed_at": "2026-05-25 15:30 UTC",
+    "pending_key": "XAUUSD_short_4561.94000_2026052515",
+    "fvg_top": 4563.29287,
+    "fvg_bottom": 4560.58713,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-25 15:31:41 UTC"
+  }
+}
