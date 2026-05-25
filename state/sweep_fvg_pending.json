@@ -1,23 +1,23 @@
 {
-  "XAUUSD_short_4561.94000_2026052515": {
-    "pair": "XAUUSD",
-    "direction": "short",
-    "entry": 4561.94,
-    "sl": 4567.65391,
-    "tp1": 4553.36913,
-    "tp2": 4528.85758,
+  "USDJPY_long_158.90132_2026052515": {
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 158.90132,
+    "sl": 158.84326,
+    "tp1": 158.98841,
+    "tp2": 159.10011,
     "rr_tp1": 1.5,
-    "rr_tp2": 5.79,
-    "sl_pips": 57.1,
+    "rr_tp2": 3.42,
+    "sl_pips": 5.8,
     "session": "NewYork",
-    "zone_src": "BSL_3touch",
-    "fired_at": "2026-05-25 15:30 UTC",
+    "zone_src": "SSL_2touch",
+    "fired_at": "2026-05-25 16:00 UTC",
     "sweep_time": "2026-05-25 15:00 UTC",
-    "fvg_formed_at": "2026-05-25 15:30 UTC",
-    "pending_key": "XAUUSD_short_4561.94000_2026052515",
-    "fvg_top": 4563.29287,
-    "fvg_bottom": 4560.58713,
-    "status": "INVALIDATED",
-    "created_at": "2026-05-25 15:31:41 UTC"
+    "fvg_formed_at": "2026-05-25 16:00 UTC",
+    "pending_key": "USDJPY_long_158.90132_2026052515",
+    "fvg_top": 158.90917,
+    "fvg_bottom": 158.89346,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-25 16:02:56 UTC"
   }
 }
