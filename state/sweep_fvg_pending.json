@@ -1,1 +1,23 @@
-{}
+{
+  "EURUSD_long_1.16387_2026052515": {
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.16387,
+    "sl": 1.16344,
+    "tp1": 1.16451,
+    "tp2": 1.16477,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.09,
+    "sl_pips": 4.3,
+    "session": "London",
+    "zone_src": "SSL_2touch",
+    "fired_at": "2026-05-25 18:30 UTC",
+    "sweep_time": "2026-05-25 17:15 UTC",
+    "fvg_formed_at": "2026-05-25 18:30 UTC",
+    "pending_key": "EURUSD_long_1.16387_2026052515",
+    "fvg_top": 1.16396,
+    "fvg_bottom": 1.16378,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-25 18:31:37 UTC"
+  }
+}
