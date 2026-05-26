@@ -1,1 +1,23 @@
-{}
+{
+  "AUDJPY_long_113.88555_2026052615": {
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.88555,
+    "sl": 113.81424,
+    "tp1": 113.99251,
+    "tp2": 114.05745,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.41,
+    "sl_pips": 7.1,
+    "session": "NewYork",
+    "zone_src": "SSL_4touch",
+    "fired_at": "2026-05-26 16:15 UTC",
+    "sweep_time": "2026-05-26 15:00 UTC",
+    "fvg_formed_at": "2026-05-26 16:15 UTC",
+    "pending_key": "AUDJPY_long_113.88555_2026052615",
+    "fvg_top": 113.90387,
+    "fvg_bottom": 113.86723,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-26 16:16:39 UTC"
+  }
+}
