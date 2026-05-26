@@ -1,27 +1,4 @@
 {
-  "EURUSD_long_1.16317_2026052615": {
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.16317,
-    "sl": 1.16258,
-    "tp1": 1.16406,
-    "tp2": 1.16452,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.29,
-    "sl_pips": 5.9,
-    "session": "NewYork",
-    "zone_src": "SSL_4touch",
-    "fired_at": "2026-05-26 16:30 UTC",
-    "sweep_time": "2026-05-26 15:00 UTC",
-    "fvg_formed_at": "2026-05-26 16:30 UTC",
-    "pending_key": "EURUSD_long_1.16317_2026052615",
-    "fvg_top": 1.1633,
-    "fvg_bottom": 1.16305,
-    "status": "ACTIVE",
-    "created_at": "2026-05-26 16:31:43 UTC",
-    "entry_time": "2026-05-26 17:00 UTC",
-    "entry_message": "\u26a1 *EURUSD \u2014 Entry Triggered!*\n\nDirection : `BUY`\nEntry     : `1.16317` \u2705\nStop Loss : `1.16258`\nTP1 (50%) : `1.16406`\nTP2 (50%) : `1.16452`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
-  },
   "CADJPY_long_115.18211_2026052615": {
     "pair": "CADJPY",
     "direction": "long",
@@ -42,28 +19,5 @@
     "fvg_bottom": 115.17426,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-26 16:46:36 UTC"
-  },
-  "GBPAUD_short_1.88070_2026052615": {
-    "pair": "GBPAUD",
-    "direction": "short",
-    "entry": 1.8807,
-    "sl": 1.88241,
-    "tp1": 1.87814,
-    "tp2": 1.8769,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.22,
-    "sl_pips": 17.1,
-    "session": "NewYork",
-    "zone_src": "BSL_2touch",
-    "fired_at": "2026-05-26 16:45 UTC",
-    "sweep_time": "2026-05-26 15:00 UTC",
-    "fvg_formed_at": "2026-05-26 16:45 UTC",
-    "pending_key": "GBPAUD_short_1.88070_2026052615",
-    "fvg_top": 1.8808,
-    "fvg_bottom": 1.88061,
-    "status": "ACTIVE",
-    "created_at": "2026-05-26 16:46:36 UTC",
-    "entry_time": "2026-05-26 17:00 UTC",
-    "entry_message": "\u26a1 *GBPAUD \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `1.88070` \u2705\nStop Loss : `1.88241`\nTP1 (50%) : `1.87814`\nTP2 (50%) : `1.87690`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }
