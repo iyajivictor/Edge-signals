@@ -1,17 +1,1 @@
-{
-  "GBPAUD_long_1.88315_2026052507": {
-    "pair": "GBPAUD",
-    "direction": "long",
-    "entry": 1.88315,
-    "sl": 1.87993,
-    "tp1": 1.88798,
-    "tp2": 1.88983,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.07,
-    "sl_pips": 32.2,
-    "fired_at": "2026-05-25 08:30 UTC",
-    "entry_time": "2026-05-25 08:45 UTC",
-    "tp1_hit": false,
-    "status": "ACTIVE"
-  }
-}
+{}
