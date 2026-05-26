@@ -1,1 +1,44 @@
-{}
+{
+  "GBPUSD_long_1.34763_2026052615": {
+    "pair": "GBPUSD",
+    "direction": "long",
+    "entry": 1.34763,
+    "sl": 1.34707,
+    "tp1": 1.34847,
+    "tp2": 1.34919,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.79,
+    "sl_pips": 5.6,
+    "session": "London",
+    "zone_src": "SSL_2touch",
+    "fired_at": "2026-05-26 19:15 UTC",
+    "sweep_time": "2026-05-26 17:00 UTC",
+    "fvg_formed_at": "2026-05-26 19:15 UTC",
+    "pending_key": "GBPUSD_long_1.34763_2026052615",
+    "fvg_top": 1.3478,
+    "fvg_bottom": 1.34747,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-26 19:16:42 UTC"
+  },
+  "GBPAUD_long_1.88143_2026052615": {
+    "pair": "GBPAUD",
+    "direction": "long",
+    "entry": 1.88143,
+    "sl": 1.88057,
+    "tp1": 1.88272,
+    "tp2": 1.88321,
+    "rr_tp1": 1.5,
+    "rr_tp2": 2.07,
+    "sl_pips": 8.6,
+    "session": "London",
+    "zone_src": "SSL_7touch",
+    "fired_at": "2026-05-26 19:15 UTC",
+    "sweep_time": "2026-05-26 16:15 UTC",
+    "fvg_formed_at": "2026-05-26 19:15 UTC",
+    "pending_key": "GBPAUD_long_1.88143_2026052615",
+    "fvg_top": 1.8817,
+    "fvg_bottom": 1.88115,
+    "status": "PENDING_ENTRY",
+    "created_at": "2026-05-26 19:16:42 UTC"
+  }
+}
