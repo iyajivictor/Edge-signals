@@ -17,7 +17,7 @@
     "pending_key": "CADJPY_long_115.18211_2026052615",
     "fvg_top": 115.18996,
     "fvg_bottom": 115.17426,
-    "status": "PENDING_ENTRY",
+    "status": "INVALIDATED",
     "created_at": "2026-05-26 16:46:36 UTC"
   }
 }
