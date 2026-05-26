@@ -38,7 +38,7 @@
     "pending_key": "XAUUSD_long_4528.78041_2026052615",
     "fvg_top": 4528.98551,
     "fvg_bottom": 4528.57531,
-    "status": "PENDING_ENTRY",
+    "status": "INVALIDATED",
     "created_at": "2026-05-26 15:16:41 UTC"
   }
 }
