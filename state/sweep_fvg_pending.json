@@ -17,8 +17,10 @@
     "pending_key": "EURUSD_short_1.16352_2026052611",
     "fvg_top": 1.16362,
     "fvg_bottom": 1.16343,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-26 13:01:41 UTC"
+    "status": "ACTIVE",
+    "created_at": "2026-05-26 13:01:41 UTC",
+    "entry_time": "2026-05-26 13:15 UTC",
+    "entry_message": "\u26a1 *EURUSD \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `1.16352` \u2705\nStop Loss : `1.16417`\nTP1 (50%) : `1.16255`\nTP2 (50%) : `1.16166`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   },
   "XAUUSD_short_4539.61363_2026052611": {
     "pair": "XAUUSD",
@@ -38,8 +40,10 @@
     "pending_key": "XAUUSD_short_4539.61363_2026052611",
     "fvg_top": 4542.94981,
     "fvg_bottom": 4536.27745,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-26 13:01:41 UTC"
+    "status": "ACTIVE",
+    "created_at": "2026-05-26 13:01:41 UTC",
+    "entry_time": "2026-05-26 13:15 UTC",
+    "entry_message": "\u26a1 *XAUUSD \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `4539.61` \u2705\nStop Loss : `4551.00`\nTP1 (50%) : `4522.54`\nTP2 (50%) : `4510.59`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   },
   "CADJPY_long_115.15484_2026052611": {
     "pair": "CADJPY",
