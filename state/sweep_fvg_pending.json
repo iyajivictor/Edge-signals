@@ -19,26 +19,5 @@
     "fvg_bottom": 158.95702,
     "status": "PENDING_ENTRY",
     "created_at": "2026-05-26 15:01:47 UTC"
-  },
-  "XAUUSD_long_4528.78041_2026052615": {
-    "pair": "XAUUSD",
-    "direction": "long",
-    "entry": 4528.78041,
-    "sl": 4522.97077,
-    "tp1": 4537.49487,
-    "tp2": 4551.24704,
-    "rr_tp1": 1.5,
-    "rr_tp2": 3.87,
-    "sl_pips": 58.1,
-    "session": "NewYork",
-    "zone_src": "SSL_13touch",
-    "fired_at": "2026-05-26 15:15 UTC",
-    "sweep_time": "2026-05-26 15:00 UTC",
-    "fvg_formed_at": "2026-05-26 15:15 UTC",
-    "pending_key": "XAUUSD_long_4528.78041_2026052615",
-    "fvg_top": 4528.98551,
-    "fvg_bottom": 4528.57531,
-    "status": "INVALIDATED",
-    "created_at": "2026-05-26 15:16:41 UTC"
   }
 }
