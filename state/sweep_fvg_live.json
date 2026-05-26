@@ -26,7 +26,7 @@
     "sl_pips": 4.9,
     "fired_at": "2026-05-25 09:45 UTC",
     "entry_time": "2026-05-25 10:15 UTC",
-    "tp1_hit": false,
+    "tp1_hit": true,
     "status": "ACTIVE"
   },
   "GBPAUD_long_1.88216_2026052515": {
@@ -42,21 +42,6 @@
     "fired_at": "2026-05-25 17:15 UTC",
     "entry_time": "2026-05-25 17:30 UTC",
     "tp1_hit": false,
-    "status": "ACTIVE"
-  },
-  "GBPAUD_short_1.88301_2026052515": {
-    "pair": "GBPAUD",
-    "direction": "short",
-    "entry": 1.88301,
-    "sl": 1.88354,
-    "tp1": 1.88222,
-    "tp2": 1.88187,
-    "rr_tp1": 1.5,
-    "rr_tp2": 2.15,
-    "sl_pips": 5.3,
-    "fired_at": "2026-05-25 18:45 UTC",
-    "entry_time": "2026-05-25 19:00 UTC",
-    "tp1_hit": true,
     "status": "ACTIVE"
   }
 }
