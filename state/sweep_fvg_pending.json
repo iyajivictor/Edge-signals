@@ -17,7 +17,9 @@
     "pending_key": "AUDJPY_short_114.01645_2026052607",
     "fvg_top": 114.03001,
     "fvg_bottom": 114.00289,
-    "status": "PENDING_ENTRY",
-    "created_at": "2026-05-26 08:02:57 UTC"
+    "status": "ACTIVE",
+    "created_at": "2026-05-26 08:02:57 UTC",
+    "entry_time": "2026-05-26 08:15 UTC",
+    "entry_message": "\u26a1 *AUDJPY \u2014 Entry Triggered!*\n\nDirection : `SELL`\nEntry     : `114.016` \u2705\nStop Loss : `114.064`\nTP1 (50%) : `113.945`\nTP2 (50%) : `113.746`\n\n_\ud83d\udfe2 Trade ACTIVE. Monitoring started._"
   }
 }

@@ -13,5 +13,20 @@
     "entry_time": "2026-05-25 08:45 UTC",
     "tp1_hit": false,
     "status": "ACTIVE"
+  },
+  "AUDJPY_short_114.01645_2026052607": {
+    "pair": "AUDJPY",
+    "direction": "short",
+    "entry": 114.01645,
+    "sl": 114.06429,
+    "tp1": 113.94469,
+    "tp2": 113.74581,
+    "rr_tp1": 1.5,
+    "rr_tp2": 5.66,
+    "sl_pips": 4.8,
+    "fired_at": "2026-05-26 08:00 UTC",
+    "entry_time": "2026-05-26 08:15 UTC",
+    "tp1_hit": false,
+    "status": "ACTIVE"
   }
 }
