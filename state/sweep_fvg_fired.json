@@ -180,13 +180,6 @@
     "pair": "XAUUSD",
     "time": "2026-05-15T18:15:00+00:00"
   },
-  "SIG_XAUUSD_short_4554.32": {
-    "fired_at": "2026-05-27T14:15:36.967516+00:00",
-    "type": "signal",
-    "pair": "XAUUSD",
-    "direction": "short",
-    "entry": 4554.31979
-  },
   "ZONE_USDJPY_SSL_158.84629": {
     "fired_at": "2026-05-27T14:30:32.473339+00:00",
     "type": "zone",
@@ -199,13 +192,6 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-05-18T09:00:00+00:00"
-  },
-  "SIG_USDJPY_long_158.844": {
-    "fired_at": "2026-05-27T14:30:32.473434+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.84398
   },
   "ZONE_EURUSD_SSL_1.15999": {
     "fired_at": "2026-05-27T15:00:38.962377+00:00",
