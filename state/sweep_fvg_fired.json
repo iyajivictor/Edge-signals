@@ -124,5 +124,105 @@
     "pair": "AUDJPY",
     "side": "SSL",
     "top": 113.08733
+  },
+  "ZONE_EURUSD_SSL_1.16241": {
+    "fired_at": "2026-05-27T12:16:13.015678+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "SSL",
+    "top": 1.16241
+  },
+  "SWEEP_EURUSD_202605151915": {
+    "fired_at": "2026-05-27T12:16:13.015761+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-05-15T19:15:00+00:00"
+  },
+  "SIG_EURUSD_long_1.16272": {
+    "fired_at": "2026-05-27T12:16:13.015808+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.16272
+  },
+  "ZONE_EURUSD_SSL_1.16035": {
+    "fired_at": "2026-05-27T12:16:13.016939+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "SSL",
+    "top": 1.16035
+  },
+  "SWEEP_EURUSD_202605200130": {
+    "fired_at": "2026-05-27T12:16:13.016999+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-05-20T01:30:00+00:00"
+  },
+  "SIG_EURUSD_long_1.15989": {
+    "fired_at": "2026-05-27T12:16:13.017048+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.15989
+  },
+  "ZONE_AUDJPY_SSL_113.74581": {
+    "fired_at": "2026-05-27T12:16:13.059335+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 113.74581
+  },
+  "SWEEP_AUDJPY_202605111600": {
+    "fired_at": "2026-05-27T12:16:13.059392+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-05-11T16:00:00+00:00"
+  },
+  "SIG_AUDJPY_long_113.629": {
+    "fired_at": "2026-05-27T12:16:13.059443+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.62918
+  },
+  "ZONE_AUDJPY_SSL_113.41985": {
+    "fired_at": "2026-05-27T12:16:13.060468+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 113.41985
+  },
+  "SWEEP_AUDJPY_202605071730": {
+    "fired_at": "2026-05-27T12:16:13.060523+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-05-07T17:30:00+00:00"
+  },
+  "SIG_AUDJPY_long_113.438": {
+    "fired_at": "2026-05-27T12:16:13.060567+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.43837
+  },
+  "ZONE_XAUUSD_BSL_4577.57530": {
+    "fired_at": "2026-05-27T12:16:13.074985+00:00",
+    "type": "zone",
+    "pair": "XAUUSD",
+    "side": "BSL",
+    "top": 4577.5753
+  },
+  "SWEEP_XAUUSD_202605151530": {
+    "fired_at": "2026-05-27T12:16:13.075032+00:00",
+    "type": "sweep",
+    "pair": "XAUUSD",
+    "time": "2026-05-15T15:30:00+00:00"
+  },
+  "SIG_XAUUSD_short_4576.70": {
+    "fired_at": "2026-05-27T12:16:13.075076+00:00",
+    "type": "signal",
+    "pair": "XAUUSD",
+    "direction": "short",
+    "entry": 4576.69882
   }
 }
