@@ -1,0 +1,45 @@
+name: EDGE Outcome Tracker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests gspread google-auth
+
+      - name: Run outcome tracker
+        env:
+          TWELVE_DATA_KEY:    ${{ secrets.TWELVE_DATA_KEY }}
+          TG_TOKEN:           ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID:         ${{ secrets.TG_CHAT_ID }}
+          SHEET_ID:           ${{ secrets.SHEET_ID }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python outcome_tracker.py
+
+      - name: Save state to repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add state/live_signals.json || true
+          git add state/sweep_fvg_live.json || true
+          STASHED=$(git stash 2>&1)
+          git pull --rebase origin main
+          echo "$STASHED" | grep -q "No local changes" || git stash pop
+          git add state/live_signals.json || true
+          git add state/sweep_fvg_live.json || true
+          git diff --cached --quiet || git commit -m "chore: clear resolved live signals"
+          git push
+
