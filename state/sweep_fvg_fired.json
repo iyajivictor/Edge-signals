@@ -206,5 +206,85 @@
     "pair": "USDJPY",
     "direction": "long",
     "entry": 158.84398
+  },
+  "ZONE_EURUSD_SSL_1.15999": {
+    "fired_at": "2026-05-27T15:00:38.962377+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "SSL",
+    "top": 1.15999
+  },
+  "SWEEP_EURUSD_202605200045": {
+    "fired_at": "2026-05-27T15:00:38.962411+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-05-20T00:45:00+00:00"
+  },
+  "SIG_EURUSD_long_1.15989": {
+    "fired_at": "2026-05-27T15:00:38.962439+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.15989
+  },
+  "ZONE_USDJPY_SSL_158.71121": {
+    "fired_at": "2026-05-27T15:00:38.989283+00:00",
+    "type": "zone",
+    "pair": "USDJPY",
+    "side": "SSL",
+    "top": 158.71121
+  },
+  "SWEEP_USDJPY_202605160030": {
+    "fired_at": "2026-05-27T15:00:38.989317+00:00",
+    "type": "sweep",
+    "pair": "USDJPY",
+    "time": "2026-05-16T00:30:00+00:00"
+  },
+  "SIG_USDJPY_long_158.670": {
+    "fired_at": "2026-05-27T15:00:38.989347+00:00",
+    "type": "signal",
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 158.67039
+  },
+  "ZONE_USDJPY_SSL_159.24382": {
+    "fired_at": "2026-05-27T15:00:38.991296+00:00",
+    "type": "zone",
+    "pair": "USDJPY",
+    "side": "SSL",
+    "top": 159.24382
+  },
+  "SWEEP_USDJPY_202605200015": {
+    "fired_at": "2026-05-27T15:00:38.991330+00:00",
+    "type": "sweep",
+    "pair": "USDJPY",
+    "time": "2026-05-20T00:15:00+00:00"
+  },
+  "SIG_USDJPY_long_159.124": {
+    "fired_at": "2026-05-27T15:00:38.991358+00:00",
+    "type": "signal",
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 159.12372
+  },
+  "ZONE_USDCAD_SSL_1.38086": {
+    "fired_at": "2026-05-27T15:00:39.043377+00:00",
+    "type": "zone",
+    "pair": "USDCAD",
+    "side": "SSL",
+    "top": 1.38086
+  },
+  "SWEEP_USDCAD_202605230445": {
+    "fired_at": "2026-05-27T15:00:39.043411+00:00",
+    "type": "sweep",
+    "pair": "USDCAD",
+    "time": "2026-05-23T04:45:00+00:00"
+  },
+  "SIG_USDCAD_long_1.38111": {
+    "fired_at": "2026-05-27T15:00:39.043441+00:00",
+    "type": "signal",
+    "pair": "USDCAD",
+    "direction": "long",
+    "entry": 1.38111
   }
 }
