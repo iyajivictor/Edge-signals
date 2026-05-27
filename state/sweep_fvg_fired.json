@@ -338,5 +338,25 @@
     "pair": "GBPAUD",
     "direction": "short",
     "entry": 1.88377
+  },
+  "ZONE_AUDJPY_SSL_113.08733": {
+    "fired_at": "2026-05-27T10:00:28.466871+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 113.08733
+  },
+  "SWEEP_AUDJPY_202605071115": {
+    "fired_at": "2026-05-27T10:00:28.466894+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-05-07T11:15:00+00:00"
+  },
+  "SIG_AUDJPY_long_113.123": {
+    "fired_at": "2026-05-27T10:00:28.466914+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.12347
   }
 }
