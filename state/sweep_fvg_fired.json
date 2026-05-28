@@ -243,5 +243,25 @@
     "pair": "CADJPY",
     "side": "SSL",
     "top": 115.24014
+  },
+  "ZONE_AUDJPY_BSL_114.07464": {
+    "fired_at": "2026-05-28T23:45:23.575682+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "BSL",
+    "top": 114.07464
+  },
+  "SWEEP_AUDJPY_202605271130": {
+    "fired_at": "2026-05-28T23:45:23.575724+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-05-27T11:30:00+00:00"
+  },
+  "SIG_AUDJPY_short_114.182": {
+    "fired_at": "2026-05-28T23:45:23.575758+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "short",
+    "entry": 114.18203
   }
 }
