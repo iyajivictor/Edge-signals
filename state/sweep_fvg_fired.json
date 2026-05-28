@@ -215,5 +215,25 @@
     "pair": "USDJPY",
     "side": "SSL",
     "top": 158.62753
+  },
+  "ZONE_GBPAUD_BSL_1.87933": {
+    "fired_at": "2026-05-28T05:00:32.206268+00:00",
+    "type": "zone",
+    "pair": "GBPAUD",
+    "side": "BSL",
+    "top": 1.87933
+  },
+  "SWEEP_GBPAUD_202605262230": {
+    "fired_at": "2026-05-28T05:00:32.206317+00:00",
+    "type": "sweep",
+    "pair": "GBPAUD",
+    "time": "2026-05-26T22:30:00+00:00"
+  },
+  "SIG_GBPAUD_short_1.87975": {
+    "fired_at": "2026-05-28T05:00:32.206361+00:00",
+    "type": "signal",
+    "pair": "GBPAUD",
+    "direction": "short",
+    "entry": 1.87975
   }
 }
