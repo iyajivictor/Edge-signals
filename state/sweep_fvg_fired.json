@@ -229,5 +229,25 @@
     "pair": "EURUSD",
     "side": "BSL",
     "top": 1.16573
+  },
+  "ZONE_CADJPY_SSL_115.18927": {
+    "fired_at": "2026-05-28T08:30:37.787192+00:00",
+    "type": "zone",
+    "pair": "CADJPY",
+    "side": "SSL",
+    "top": 115.18927
+  },
+  "SWEEP_CADJPY_202605261000": {
+    "fired_at": "2026-05-28T08:30:37.787245+00:00",
+    "type": "sweep",
+    "pair": "CADJPY",
+    "time": "2026-05-26T10:00:00+00:00"
+  },
+  "SIG_CADJPY_long_115.155": {
+    "fired_at": "2026-05-28T08:30:37.787283+00:00",
+    "type": "signal",
+    "pair": "CADJPY",
+    "direction": "long",
+    "entry": 115.15484
   }
 }
