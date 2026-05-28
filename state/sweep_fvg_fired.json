@@ -229,13 +229,6 @@
     "pair": "GBPAUD",
     "time": "2026-05-26T22:30:00+00:00"
   },
-  "SIG_GBPAUD_short_1.87975": {
-    "fired_at": "2026-05-28T05:00:32.206361+00:00",
-    "type": "signal",
-    "pair": "GBPAUD",
-    "direction": "short",
-    "entry": 1.87975
-  },
   "ZONE_EURUSD_BSL_1.16573": {
     "fired_at": "2026-05-28T05:15:28.543175+00:00",
     "type": "zone",
