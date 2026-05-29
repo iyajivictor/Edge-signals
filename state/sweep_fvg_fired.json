@@ -250,5 +250,25 @@
     "pair": "AUDJPY",
     "side": "BSL",
     "top": 114.07464
+  },
+  "ZONE_GBPJPY_BSL_214.31578": {
+    "fired_at": "2026-05-29T04:30:34.779862+00:00",
+    "type": "zone",
+    "pair": "GBPJPY",
+    "side": "BSL",
+    "top": 214.31578
+  },
+  "SWEEP_GBPJPY_202605270045": {
+    "fired_at": "2026-05-29T04:30:34.779903+00:00",
+    "type": "sweep",
+    "pair": "GBPJPY",
+    "time": "2026-05-27T00:45:00+00:00"
+  },
+  "SIG_GBPJPY_short_214.348": {
+    "fired_at": "2026-05-29T04:30:34.779939+00:00",
+    "type": "signal",
+    "pair": "GBPJPY",
+    "direction": "short",
+    "entry": 214.34796
   }
 }
