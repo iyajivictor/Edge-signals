@@ -11,12 +11,5 @@
     "type": "sweep",
     "pair": "CADJPY",
     "time": "2026-05-29T17:00:00+00:00"
-  },
-  "SIG_CADJPY_short_115.399": {
-    "fired_at": "2026-06-02T16:15:47.199015+00:00",
-    "type": "signal",
-    "pair": "CADJPY",
-    "direction": "short",
-    "entry": 115.39939
   }
 }
