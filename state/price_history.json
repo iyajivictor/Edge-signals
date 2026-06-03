@@ -88336,15 +88336,6 @@
       "breakout_time": "2026-05-15 15:45:00",
       "trend": "bearish",
       "created": "2026-05-15T06:01:12.739965+00:00"
-    },
-    "USDJPY": {
-      "dir": "long",
-      "level": 159.97998,
-      "sl": 159.9016575,
-      "breakout_idx": 1304,
-      "breakout_time": "2026-06-03T09:30:00+00:00",
-      "trend": "bullish",
-      "created": "2026-06-03T09:30:30.375027+00:00"
     }
   },
   "fired_signals": [
