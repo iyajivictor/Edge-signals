@@ -88336,6 +88336,24 @@
       "breakout_time": "2026-05-15 15:45:00",
       "trend": "bearish",
       "created": "2026-05-15T06:01:12.739965+00:00"
+    },
+    "GBPUSD": {
+      "dir": "short",
+      "level": 1.34423,
+      "sl": 1.3456189285714286,
+      "breakout_idx": 1329,
+      "breakout_time": "2026-06-03T22:30:00+00:00",
+      "trend": "bearish",
+      "created": "2026-06-03T22:30:31.927992+00:00"
+    },
+    "EURUSD": {
+      "dir": "short",
+      "level": 1.16058,
+      "sl": 1.1622501785714288,
+      "breakout_idx": 1329,
+      "breakout_time": "2026-06-03T22:30:00+00:00",
+      "trend": "bearish",
+      "created": "2026-06-03T22:30:31.957428+00:00"
     }
   },
   "fired_signals": [
