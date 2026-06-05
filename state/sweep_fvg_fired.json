@@ -27,24 +27,12 @@
     "side": "SSL",
     "top": 213.01046
   },
-  "SWEEP_GBPJPY_202605200345": {
-    "fired_at": "2026-06-05T21:00:29.376706+00:00",
-    "type": "sweep",
-    "pair": "GBPJPY",
-    "time": "2026-05-20T03:45:00+00:00"
-  },
   "ZONE_GBPAUD_BSL_1.88348": {
     "fired_at": "2026-06-05T21:00:29.390241+00:00",
     "type": "zone",
     "pair": "GBPAUD",
     "side": "BSL",
     "top": 1.88348
-  },
-  "SWEEP_GBPAUD_202605211830": {
-    "fired_at": "2026-06-05T21:00:29.390304+00:00",
-    "type": "sweep",
-    "pair": "GBPAUD",
-    "time": "2026-05-21T18:30:00+00:00"
   },
   "ZONE_EURUSD_BSL_1.16573": {
     "fired_at": "2026-06-05T21:30:26.712049+00:00",
