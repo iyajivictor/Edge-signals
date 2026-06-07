@@ -58,5 +58,25 @@
     "pair": "GBPAUD",
     "direction": "short",
     "entry": 1.88377
+  },
+  "ZONE_EURUSD_BSL_1.16573": {
+    "fired_at": "2026-06-07T23:15:26.886291+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "BSL",
+    "top": 1.16573
+  },
+  "SWEEP_EURUSD_202605272230": {
+    "fired_at": "2026-06-07T23:15:26.886347+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-05-27T22:30:00+00:00"
+  },
+  "SIG_EURUSD_short_1.16527": {
+    "fired_at": "2026-06-07T23:15:26.886389+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.16527
   }
 }
