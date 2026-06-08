@@ -76,19 +76,6 @@
     "side": "SSL",
     "top": 158.97792
   },
-  "SWEEP_USDJPY_202605211245": {
-    "fired_at": "2026-06-08T14:15:31.387915+00:00",
-    "type": "sweep",
-    "pair": "USDJPY",
-    "time": "2026-05-21T12:45:00+00:00"
-  },
-  "SIG_USDJPY_long_158.949": {
-    "fired_at": "2026-06-08T14:15:31.387939+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.94921
-  },
   "ZONE_EURUSD_SSL_1.16278": {
     "fired_at": "2026-06-08T15:00:35.709778+00:00",
     "type": "zone",
