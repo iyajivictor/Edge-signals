@@ -6,13 +6,6 @@
     "side": "SSL",
     "top": 1.16035
   },
-  "SIG_EURUSD_long_1.15989": {
-    "fired_at": "2026-06-08T00:00:49.386786+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.15989
-  },
   "ZONE_GBPJPY_SSL_213.01046": {
     "fired_at": "2026-06-07T23:00:27.174772+00:00",
     "type": "zone",
@@ -53,13 +46,6 @@
     "type": "sweep",
     "pair": "EURUSD",
     "time": "2026-05-18T13:45:00+00:00"
-  },
-  "SIG_EURUSD_long_1.16213": {
-    "fired_at": "2026-06-08T00:00:49.385133+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.16213
   },
   "ZONE_EURUSD_SSL_1.15999": {
     "fired_at": "2026-06-08T00:00:49.386733+00:00",
