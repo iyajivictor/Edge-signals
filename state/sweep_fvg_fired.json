@@ -82,11 +82,5 @@
     "pair": "EURUSD",
     "side": "SSL",
     "top": 1.16278
-  },
-  "SWEEP_EURUSD_202605210415": {
-    "fired_at": "2026-06-08T15:00:35.709819+00:00",
-    "type": "sweep",
-    "pair": "EURUSD",
-    "time": "2026-05-21T04:15:00+00:00"
   }
 }
