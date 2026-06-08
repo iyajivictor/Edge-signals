@@ -68,13 +68,6 @@
     "pair": "USDJPY",
     "time": "2026-05-20T01:15:00+00:00"
   },
-  "SIG_USDJPY_long_159.124": {
-    "fired_at": "2026-06-08T13:00:36.014020+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 159.12372
-  },
   "ZONE_CADJPY_BSL_115.41779": {
     "fired_at": "2026-06-08T13:15:35.972825+00:00",
     "type": "zone",
@@ -94,5 +87,25 @@
     "pair": "CADJPY",
     "direction": "short",
     "entry": 115.43094
+  },
+  "ZONE_USDJPY_SSL_158.97792": {
+    "fired_at": "2026-06-08T14:15:31.387885+00:00",
+    "type": "zone",
+    "pair": "USDJPY",
+    "side": "SSL",
+    "top": 158.97792
+  },
+  "SWEEP_USDJPY_202605211245": {
+    "fired_at": "2026-06-08T14:15:31.387915+00:00",
+    "type": "sweep",
+    "pair": "USDJPY",
+    "time": "2026-05-21T12:45:00+00:00"
+  },
+  "SIG_USDJPY_long_158.949": {
+    "fired_at": "2026-06-08T14:15:31.387939+00:00",
+    "type": "signal",
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 158.94921
   }
 }
