@@ -82,5 +82,25 @@
     "pair": "EURUSD",
     "side": "SSL",
     "top": 1.16278
+  },
+  "ZONE_AUDJPY_SSL_113.09281": {
+    "fired_at": "2026-06-09T02:15:25.181235+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 113.09281
+  },
+  "SWEEP_AUDJPY_202606081030": {
+    "fired_at": "2026-06-09T02:15:25.181292+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-06-08T10:30:00+00:00"
+  },
+  "SIG_AUDJPY_long_113.026": {
+    "fired_at": "2026-06-09T02:15:25.181333+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 113.02635
   }
 }
