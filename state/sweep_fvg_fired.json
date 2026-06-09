@@ -96,5 +96,25 @@
     "pair": "CADJPY",
     "side": "SSL",
     "top": 114.80617
+  },
+  "ZONE_CADJPY_BSL_115.35831": {
+    "fired_at": "2026-06-09T14:45:30.855309+00:00",
+    "type": "zone",
+    "pair": "CADJPY",
+    "side": "BSL",
+    "top": 115.35831
+  },
+  "SWEEP_CADJPY_202605220330": {
+    "fired_at": "2026-06-09T14:45:30.855353+00:00",
+    "type": "sweep",
+    "pair": "CADJPY",
+    "time": "2026-05-22T03:30:00+00:00"
+  },
+  "SIG_CADJPY_short_115.344": {
+    "fired_at": "2026-06-09T14:45:30.855388+00:00",
+    "type": "signal",
+    "pair": "CADJPY",
+    "direction": "short",
+    "entry": 115.34386
   }
 }
