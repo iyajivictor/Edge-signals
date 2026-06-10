@@ -117,13 +117,6 @@
     "pair": "EURUSD",
     "time": "2026-05-22T03:15:00+00:00"
   },
-  "SIG_EURUSD_long_1.16068": {
-    "fired_at": "2026-06-10T00:00:52.446691+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.16068
-  },
   "ZONE_GBPUSD_SSL_1.34371": {
     "fired_at": "2026-06-10T00:00:52.457948+00:00",
     "type": "zone",
@@ -137,13 +130,6 @@
     "pair": "GBPUSD",
     "time": "2026-05-22T03:15:00+00:00"
   },
-  "SIG_GBPUSD_long_1.34246": {
-    "fired_at": "2026-06-10T00:00:52.457978+00:00",
-    "type": "signal",
-    "pair": "GBPUSD",
-    "direction": "long",
-    "entry": 1.34246
-  },
   "ZONE_USDJPY_SSL_158.92473": {
     "fired_at": "2026-06-10T00:00:52.468961+00:00",
     "type": "zone",
@@ -156,13 +142,6 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-05-25T09:30:00+00:00"
-  },
-  "SIG_USDJPY_long_158.897": {
-    "fired_at": "2026-06-10T00:00:52.469013+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.89652
   },
   "ZONE_GBPUSD_SSL_1.34237": {
     "fired_at": "2026-06-10T00:30:50.671184+00:00",
