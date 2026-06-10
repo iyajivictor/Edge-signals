@@ -132,12 +132,6 @@
     "side": "SSL",
     "top": 1.34237
   },
-  "SWEEP_GBPUSD_202605220300": {
-    "fired_at": "2026-06-10T00:30:50.671226+00:00",
-    "type": "sweep",
-    "pair": "GBPUSD",
-    "time": "2026-05-22T03:00:00+00:00"
-  },
   "ZONE_USDJPY_SSL_159.19983": {
     "fired_at": "2026-06-10T00:45:47.898512+00:00",
     "type": "zone",
@@ -150,12 +144,5 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-05-22T00:45:00+00:00"
-  },
-  "SIG_USDJPY_long_159.219": {
-    "fired_at": "2026-06-10T00:45:47.898567+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 159.21867
   }
 }
