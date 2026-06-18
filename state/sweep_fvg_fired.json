@@ -145,5 +145,25 @@
     "pair": "AUDJPY",
     "side": "BSL",
     "top": 114.07464
+  },
+  "ZONE_GBPUSD_SSL_1.34297": {
+    "fired_at": "2026-06-18T00:00:59.085886+00:00",
+    "type": "zone",
+    "pair": "GBPUSD",
+    "side": "SSL",
+    "top": 1.34297
+  },
+  "SWEEP_GBPUSD_202605292145": {
+    "fired_at": "2026-06-18T00:00:59.085930+00:00",
+    "type": "sweep",
+    "pair": "GBPUSD",
+    "time": "2026-05-29T21:45:00+00:00"
+  },
+  "SIG_GBPUSD_long_1.34258": {
+    "fired_at": "2026-06-18T00:00:59.085966+00:00",
+    "type": "signal",
+    "pair": "GBPUSD",
+    "direction": "long",
+    "entry": 1.34258
   }
 }
