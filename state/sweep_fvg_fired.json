@@ -152,5 +152,25 @@
     "pair": "GBPUSD",
     "side": "SSL",
     "top": 1.34297
+  },
+  "ZONE_CADJPY_SSL_114.99065": {
+    "fired_at": "2026-06-25T04:15:44.722964+00:00",
+    "type": "zone",
+    "pair": "CADJPY",
+    "side": "SSL",
+    "top": 114.99065
+  },
+  "SWEEP_CADJPY_202606041915": {
+    "fired_at": "2026-06-25T04:15:44.722976+00:00",
+    "type": "sweep",
+    "pair": "CADJPY",
+    "time": "2026-06-04T19:15:00+00:00"
+  },
+  "SIG_CADJPY_long_114.940": {
+    "fired_at": "2026-06-25T04:15:44.722987+00:00",
+    "type": "signal",
+    "pair": "CADJPY",
+    "direction": "long",
+    "entry": 114.9402
   }
 }
