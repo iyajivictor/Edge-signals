@@ -173,13 +173,6 @@
     "pair": "EURUSD",
     "time": "2026-06-15T07:15:00+00:00"
   },
-  "SIG_EURUSD_long_1.15848": {
-    "fired_at": "2026-06-28T23:00:40.186408+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.15848
-  },
   "ZONE_AUDJPY_SSL_113.50002": {
     "fired_at": "2026-06-28T23:00:40.230546+00:00",
     "type": "zone",
@@ -192,12 +185,5 @@
     "type": "sweep",
     "pair": "AUDJPY",
     "time": "2026-06-16T00:45:00+00:00"
-  },
-  "SIG_AUDJPY_long_113.343": {
-    "fired_at": "2026-06-28T23:00:40.230598+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "long",
-    "entry": 113.34336
   }
 }
