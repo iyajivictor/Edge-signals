@@ -167,23 +167,11 @@
     "side": "SSL",
     "top": 1.15945
   },
-  "SWEEP_EURUSD_202606150715": {
-    "fired_at": "2026-06-28T23:00:40.186364+00:00",
-    "type": "sweep",
-    "pair": "EURUSD",
-    "time": "2026-06-15T07:15:00+00:00"
-  },
   "ZONE_AUDJPY_SSL_113.50002": {
     "fired_at": "2026-06-28T23:00:40.230546+00:00",
     "type": "zone",
     "pair": "AUDJPY",
     "side": "SSL",
     "top": 113.50002
-  },
-  "SWEEP_AUDJPY_202606160045": {
-    "fired_at": "2026-06-28T23:00:40.230574+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-06-16T00:45:00+00:00"
   }
 }
