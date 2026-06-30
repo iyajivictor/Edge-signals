@@ -173,5 +173,25 @@
     "pair": "AUDJPY",
     "side": "SSL",
     "top": 113.50002
+  },
+  "ZONE_CADJPY_SSL_115.05058": {
+    "fired_at": "2026-06-30T06:15:28.065441+00:00",
+    "type": "zone",
+    "pair": "CADJPY",
+    "side": "SSL",
+    "top": 115.05058
+  },
+  "SWEEP_CADJPY_202606092145": {
+    "fired_at": "2026-06-30T06:15:28.065476+00:00",
+    "type": "sweep",
+    "pair": "CADJPY",
+    "time": "2026-06-09T21:45:00+00:00"
+  },
+  "SIG_CADJPY_long_115.023": {
+    "fired_at": "2026-06-30T06:15:28.065504+00:00",
+    "type": "signal",
+    "pair": "CADJPY",
+    "direction": "long",
+    "entry": 115.02348
   }
 }
