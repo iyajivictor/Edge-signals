@@ -279,24 +279,12 @@
     "side": "BSL",
     "top": 1.14395
   },
-  "SWEEP_EURUSD_202606191430": {
-    "fired_at": "2026-07-06T15:01:01.123149+00:00",
-    "type": "sweep",
-    "pair": "EURUSD",
-    "time": "2026-06-19T14:30:00+00:00"
-  },
   "ZONE_USDJPY_SSL_161.51344": {
     "fired_at": "2026-07-06T15:01:01.153901+00:00",
     "type": "zone",
     "pair": "USDJPY",
     "side": "SSL",
     "top": 161.51344
-  },
-  "SWEEP_USDJPY_202606190245": {
-    "fired_at": "2026-07-06T15:01:01.153923+00:00",
-    "type": "sweep",
-    "pair": "USDJPY",
-    "time": "2026-06-19T02:45:00+00:00"
   },
   "ZONE_EURJPY_SSL_185.08938": {
     "fired_at": "2026-07-06T15:01:01.225506+00:00",
@@ -305,23 +293,11 @@
     "side": "SSL",
     "top": 185.08938
   },
-  "SWEEP_EURJPY_202606181045": {
-    "fired_at": "2026-07-06T15:01:01.225542+00:00",
-    "type": "sweep",
-    "pair": "EURJPY",
-    "time": "2026-06-18T10:45:00+00:00"
-  },
   "ZONE_USDJPY_SSL_160.60117": {
     "fired_at": "2026-07-06T15:15:33.096927+00:00",
     "type": "zone",
     "pair": "USDJPY",
     "side": "SSL",
     "top": 160.60117
-  },
-  "SWEEP_USDJPY_202606180500": {
-    "fired_at": "2026-07-06T15:15:33.096994+00:00",
-    "type": "sweep",
-    "pair": "USDJPY",
-    "time": "2026-06-18T05:00:00+00:00"
   }
 }
