@@ -223,12 +223,6 @@
     "side": "BSL",
     "top": 112.05778
   },
-  "SWEEP_AUDJPY_202606232145": {
-    "fired_at": "2026-07-06T09:00:59.089221+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-06-23T21:45:00+00:00"
-  },
   "ZONE_USDJPY_SSL_160.58448": {
     "fired_at": "2026-07-06T09:30:52.118348+00:00",
     "type": "zone",
@@ -241,13 +235,6 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-06-18T05:00:00+00:00"
-  },
-  "SIG_USDJPY_long_160.525": {
-    "fired_at": "2026-07-06T09:30:52.118432+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 160.52453
   },
   "ZONE_EURUSD_SSL_1.14254": {
     "fired_at": "2026-07-06T10:15:27.300328+00:00",
