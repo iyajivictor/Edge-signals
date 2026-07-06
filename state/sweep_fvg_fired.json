@@ -264,5 +264,25 @@
     "pair": "CADJPY",
     "side": "SSL",
     "top": 113.314
+  },
+  "ZONE_XAUUSD_SSL_4145.21895": {
+    "fired_at": "2026-07-06T14:15:34.740535+00:00",
+    "type": "zone",
+    "pair": "XAUUSD",
+    "side": "SSL",
+    "top": 4145.21895
+  },
+  "SWEEP_XAUUSD_202606191600": {
+    "fired_at": "2026-07-06T14:15:34.740593+00:00",
+    "type": "sweep",
+    "pair": "XAUUSD",
+    "time": "2026-06-19T16:00:00+00:00"
+  },
+  "SIG_XAUUSD_long_4146.20": {
+    "fired_at": "2026-07-06T14:15:34.740618+00:00",
+    "type": "signal",
+    "pair": "XAUUSD",
+    "direction": "long",
+    "entry": 4146.19766
   }
 }
