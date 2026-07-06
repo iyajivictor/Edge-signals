@@ -243,13 +243,6 @@
     "pair": "EURUSD",
     "time": "2026-06-23T13:15:00+00:00"
   },
-  "SIG_EURUSD_long_1.14272": {
-    "fired_at": "2026-07-06T10:15:27.300431+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.14272
-  },
   "ZONE_USDJPY_SSL_161.34143": {
     "fired_at": "2026-07-06T11:00:54.676707+00:00",
     "type": "zone",
