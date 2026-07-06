@@ -284,5 +284,65 @@
     "pair": "XAUUSD",
     "direction": "long",
     "entry": 4146.19766
+  },
+  "ZONE_EURUSD_BSL_1.14395": {
+    "fired_at": "2026-07-06T15:01:01.123125+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "BSL",
+    "top": 1.14395
+  },
+  "SWEEP_EURUSD_202606191430": {
+    "fired_at": "2026-07-06T15:01:01.123149+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-06-19T14:30:00+00:00"
+  },
+  "SIG_EURUSD_short_1.14372": {
+    "fired_at": "2026-07-06T15:01:01.123175+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.14372
+  },
+  "ZONE_USDJPY_SSL_161.51344": {
+    "fired_at": "2026-07-06T15:01:01.153901+00:00",
+    "type": "zone",
+    "pair": "USDJPY",
+    "side": "SSL",
+    "top": 161.51344
+  },
+  "SWEEP_USDJPY_202606190245": {
+    "fired_at": "2026-07-06T15:01:01.153923+00:00",
+    "type": "sweep",
+    "pair": "USDJPY",
+    "time": "2026-06-19T02:45:00+00:00"
+  },
+  "SIG_USDJPY_long_161.378": {
+    "fired_at": "2026-07-06T15:01:01.153941+00:00",
+    "type": "signal",
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 161.37809
+  },
+  "ZONE_EURJPY_SSL_185.08938": {
+    "fired_at": "2026-07-06T15:01:01.225506+00:00",
+    "type": "zone",
+    "pair": "EURJPY",
+    "side": "SSL",
+    "top": 185.08938
+  },
+  "SWEEP_EURJPY_202606181045": {
+    "fired_at": "2026-07-06T15:01:01.225542+00:00",
+    "type": "sweep",
+    "pair": "EURJPY",
+    "time": "2026-06-18T10:45:00+00:00"
+  },
+  "SIG_EURJPY_long_185.014": {
+    "fired_at": "2026-07-06T15:01:01.225574+00:00",
+    "type": "signal",
+    "pair": "EURJPY",
+    "direction": "long",
+    "entry": 185.01375
   }
 }
