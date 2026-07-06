@@ -187,5 +187,45 @@
     "pair": "CADJPY",
     "side": "SSL",
     "top": 115.18927
+  },
+  "ZONE_AUDJPY_BSL_112.34001": {
+    "fired_at": "2026-07-06T08:01:14.917533+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "BSL",
+    "top": 112.34001
+  },
+  "SWEEP_AUDJPY_202607011015": {
+    "fired_at": "2026-07-06T08:01:14.917593+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-07-01T10:15:00+00:00"
+  },
+  "SIG_AUDJPY_short_112.319": {
+    "fired_at": "2026-07-06T08:01:14.917649+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "short",
+    "entry": 112.31874
+  },
+  "ZONE_XAUUSD_SSL_4121.21679": {
+    "fired_at": "2026-07-06T08:01:14.933653+00:00",
+    "type": "zone",
+    "pair": "XAUUSD",
+    "side": "SSL",
+    "top": 4121.21679
+  },
+  "SWEEP_XAUUSD_202607030545": {
+    "fired_at": "2026-07-06T08:01:14.933721+00:00",
+    "type": "sweep",
+    "pair": "XAUUSD",
+    "time": "2026-07-03T05:45:00+00:00"
+  },
+  "SIG_XAUUSD_long_4115.89": {
+    "fired_at": "2026-07-06T08:01:14.933777+00:00",
+    "type": "signal",
+    "pair": "XAUUSD",
+    "direction": "long",
+    "entry": 4115.88929
   }
 }
