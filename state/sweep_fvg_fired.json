@@ -195,24 +195,12 @@
     "side": "BSL",
     "top": 112.34001
   },
-  "SWEEP_AUDJPY_202607011015": {
-    "fired_at": "2026-07-06T08:01:14.917593+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-07-01T10:15:00+00:00"
-  },
   "ZONE_XAUUSD_SSL_4121.21679": {
     "fired_at": "2026-07-06T08:01:14.933653+00:00",
     "type": "zone",
     "pair": "XAUUSD",
     "side": "SSL",
     "top": 4121.21679
-  },
-  "SWEEP_XAUUSD_202607030545": {
-    "fired_at": "2026-07-06T08:01:14.933721+00:00",
-    "type": "sweep",
-    "pair": "XAUUSD",
-    "time": "2026-07-03T05:45:00+00:00"
   },
   "ZONE_USDJPY_SSL_160.74303": {
     "fired_at": "2026-07-06T08:15:34.616682+00:00",
@@ -221,38 +209,12 @@
     "side": "SSL",
     "top": 160.74303
   },
-  "SWEEP_USDJPY_202606180515": {
-    "fired_at": "2026-07-06T08:15:34.616745+00:00",
-    "type": "sweep",
-    "pair": "USDJPY",
-    "time": "2026-06-18T05:15:00+00:00"
-  },
-  "SIG_USDJPY_long_160.636": {
-    "fired_at": "2026-07-06T08:15:34.616799+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 160.63646
-  },
   "ZONE_EURJPY_BSL_184.97968": {
     "fired_at": "2026-07-06T08:15:34.685501+00:00",
     "type": "zone",
     "pair": "EURJPY",
     "side": "BSL",
     "top": 184.97968
-  },
-  "SWEEP_EURJPY_202606180500": {
-    "fired_at": "2026-07-06T08:15:34.685566+00:00",
-    "type": "sweep",
-    "pair": "EURJPY",
-    "time": "2026-06-18T05:00:00+00:00"
-  },
-  "SIG_EURJPY_short_185.030": {
-    "fired_at": "2026-07-06T08:15:34.685619+00:00",
-    "type": "signal",
-    "pair": "EURJPY",
-    "direction": "short",
-    "entry": 185.02984
   },
   "ZONE_AUDJPY_BSL_112.05778": {
     "fired_at": "2026-07-06T09:00:59.089190+00:00",
@@ -273,5 +235,25 @@
     "pair": "AUDJPY",
     "direction": "short",
     "entry": 112.11937
+  },
+  "ZONE_USDJPY_SSL_160.58448": {
+    "fired_at": "2026-07-06T09:30:52.118348+00:00",
+    "type": "zone",
+    "pair": "USDJPY",
+    "side": "SSL",
+    "top": 160.58448
+  },
+  "SWEEP_USDJPY_202606180500": {
+    "fired_at": "2026-07-06T09:30:52.118394+00:00",
+    "type": "sweep",
+    "pair": "USDJPY",
+    "time": "2026-06-18T05:00:00+00:00"
+  },
+  "SIG_USDJPY_long_160.525": {
+    "fired_at": "2026-07-06T09:30:52.118432+00:00",
+    "type": "signal",
+    "pair": "USDJPY",
+    "direction": "long",
+    "entry": 160.52453
   }
 }
