@@ -320,13 +320,6 @@
     "pair": "GBPJPY",
     "time": "2026-05-19T01:45:00+00:00"
   },
-  "SIG_GBPJPY_long_213.062": {
-    "fired_at": "2026-07-08T00:01:20.988930+00:00",
-    "type": "signal",
-    "pair": "GBPJPY",
-    "direction": "long",
-    "entry": 213.06221
-  },
   "ZONE_GBPJPY_SSL_213.76579": {
     "fired_at": "2026-07-08T00:01:20.989905+00:00",
     "type": "zone",
@@ -339,12 +332,5 @@
     "type": "sweep",
     "pair": "GBPJPY",
     "time": "2026-05-23T00:30:00+00:00"
-  },
-  "SIG_GBPJPY_long_213.922": {
-    "fired_at": "2026-07-08T00:01:20.990014+00:00",
-    "type": "signal",
-    "pair": "GBPJPY",
-    "direction": "long",
-    "entry": 213.92154
   }
 }
