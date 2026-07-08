@@ -314,23 +314,11 @@
     "side": "SSL",
     "top": 213.30248
   },
-  "SWEEP_GBPJPY_202605190145": {
-    "fired_at": "2026-07-08T00:01:20.988877+00:00",
-    "type": "sweep",
-    "pair": "GBPJPY",
-    "time": "2026-05-19T01:45:00+00:00"
-  },
   "ZONE_GBPJPY_SSL_213.76579": {
     "fired_at": "2026-07-08T00:01:20.989905+00:00",
     "type": "zone",
     "pair": "GBPJPY",
     "side": "SSL",
     "top": 213.76579
-  },
-  "SWEEP_GBPJPY_202605230030": {
-    "fired_at": "2026-07-08T00:01:20.989960+00:00",
-    "type": "sweep",
-    "pair": "GBPJPY",
-    "time": "2026-05-23T00:30:00+00:00"
   }
 }
