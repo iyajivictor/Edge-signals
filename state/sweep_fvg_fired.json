@@ -333,12 +333,5 @@
     "type": "sweep",
     "pair": "GBPJPY",
     "time": "2026-05-19T01:45:00+00:00"
-  },
-  "SIG_GBPJPY_long_213.062": {
-    "fired_at": "2026-07-08T11:00:56.394925+00:00",
-    "type": "signal",
-    "pair": "GBPJPY",
-    "direction": "long",
-    "entry": 213.06221
   }
 }
