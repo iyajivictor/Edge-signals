@@ -348,5 +348,25 @@
     "pair": "USDCAD",
     "side": "SSL",
     "top": 1.41588
+  },
+  "ZONE_EURUSD_BSL_1.14479": {
+    "fired_at": "2026-07-14T04:01:05.291557+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "BSL",
+    "top": 1.14479
+  },
+  "SWEEP_EURUSD_202606221730": {
+    "fired_at": "2026-07-14T04:01:05.291606+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-06-22T17:30:00+00:00"
+  },
+  "SIG_EURUSD_short_1.14512": {
+    "fired_at": "2026-07-14T04:01:05.291654+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "short",
+    "entry": 1.14512
   }
 }
