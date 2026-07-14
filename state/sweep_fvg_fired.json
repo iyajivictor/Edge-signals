@@ -368,12 +368,5 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-07-02T23:15:00+00:00"
-  },
-  "SIG_USDJPY_long_160.978": {
-    "fired_at": "2026-07-14T06:15:30.155661+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 160.97755
   }
 }
