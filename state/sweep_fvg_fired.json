@@ -369,5 +369,25 @@
     "pair": "XAUUSD",
     "side": "BSL",
     "top": 4195.33479
+  },
+  "ZONE_XAUUSD_BSL_4179.47649": {
+    "fired_at": "2026-07-15T05:15:26.819965+00:00",
+    "type": "zone",
+    "pair": "XAUUSD",
+    "side": "BSL",
+    "top": 4179.47649
+  },
+  "SWEEP_XAUUSD_202606231115": {
+    "fired_at": "2026-07-15T05:15:26.820017+00:00",
+    "type": "sweep",
+    "pair": "XAUUSD",
+    "time": "2026-06-23T11:15:00+00:00"
+  },
+  "SIG_XAUUSD_short_4182.89": {
+    "fired_at": "2026-07-15T05:15:26.820044+00:00",
+    "type": "signal",
+    "pair": "XAUUSD",
+    "direction": "short",
+    "entry": 4182.89019
   }
 }
