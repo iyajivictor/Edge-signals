@@ -375,12 +375,5 @@
     "type": "sweep",
     "pair": "XAUUSD",
     "time": "2026-06-23T00:15:00+00:00"
-  },
-  "SIG_XAUUSD_short_4192.79": {
-    "fired_at": "2026-07-15T02:15:25.855719+00:00",
-    "type": "signal",
-    "pair": "XAUUSD",
-    "direction": "short",
-    "entry": 4192.78622
   }
 }
