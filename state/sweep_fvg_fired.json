@@ -389,12 +389,5 @@
     "type": "sweep",
     "pair": "EURJPY",
     "time": "2026-06-29T16:15:00+00:00"
-  },
-  "SIG_EURJPY_long_184.427": {
-    "fired_at": "2026-07-16T07:00:52.536285+00:00",
-    "type": "signal",
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 184.42682
   }
 }
