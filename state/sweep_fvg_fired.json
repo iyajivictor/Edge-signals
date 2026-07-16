@@ -376,5 +376,25 @@
     "pair": "XAUUSD",
     "side": "BSL",
     "top": 4179.47649
+  },
+  "ZONE_EURJPY_SSL_184.60148": {
+    "fired_at": "2026-07-16T07:00:52.536149+00:00",
+    "type": "zone",
+    "pair": "EURJPY",
+    "side": "SSL",
+    "top": 184.60148
+  },
+  "SWEEP_EURJPY_202606291615": {
+    "fired_at": "2026-07-16T07:00:52.536211+00:00",
+    "type": "sweep",
+    "pair": "EURJPY",
+    "time": "2026-06-29T16:15:00+00:00"
+  },
+  "SIG_EURJPY_long_184.427": {
+    "fired_at": "2026-07-16T07:00:52.536285+00:00",
+    "type": "signal",
+    "pair": "EURJPY",
+    "direction": "long",
+    "entry": 184.42682
   }
 }
