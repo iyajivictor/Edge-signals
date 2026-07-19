@@ -417,5 +417,45 @@
     "pair": "EURJPY",
     "direction": "long",
     "entry": 183.76585
+  },
+  "ZONE_AUDJPY_SSL_111.44621": {
+    "fired_at": "2026-07-19T23:45:25.131480+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 111.44621
+  },
+  "SWEEP_AUDJPY_202606251245": {
+    "fired_at": "2026-07-19T23:45:25.131521+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-06-25T12:45:00+00:00"
+  },
+  "SIG_AUDJPY_long_111.527": {
+    "fired_at": "2026-07-19T23:45:25.131556+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 111.52734
+  },
+  "ZONE_USDCAD_BSL_1.42250": {
+    "fired_at": "2026-07-19T23:45:25.171778+00:00",
+    "type": "zone",
+    "pair": "USDCAD",
+    "side": "BSL",
+    "top": 1.4225
+  },
+  "SWEEP_USDCAD_202606251815": {
+    "fired_at": "2026-07-19T23:45:25.171817+00:00",
+    "type": "sweep",
+    "pair": "USDCAD",
+    "time": "2026-06-25T18:15:00+00:00"
+  },
+  "SIG_USDCAD_short_1.42272": {
+    "fired_at": "2026-07-19T23:45:25.171853+00:00",
+    "type": "signal",
+    "pair": "USDCAD",
+    "direction": "short",
+    "entry": 1.42272
   }
 }
