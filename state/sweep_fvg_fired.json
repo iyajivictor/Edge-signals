@@ -425,18 +425,5 @@
     "pair": "USDCAD",
     "side": "BSL",
     "top": 1.42191
-  },
-  "SWEEP_USDCAD_202606252330": {
-    "fired_at": "2026-07-20T00:00:50.405177+00:00",
-    "type": "sweep",
-    "pair": "USDCAD",
-    "time": "2026-06-25T23:30:00+00:00"
-  },
-  "SIG_USDCAD_short_1.42176": {
-    "fired_at": "2026-07-20T00:00:50.405234+00:00",
-    "type": "signal",
-    "pair": "USDCAD",
-    "direction": "short",
-    "entry": 1.42176
   }
 }
