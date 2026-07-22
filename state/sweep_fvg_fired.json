@@ -432,5 +432,25 @@
     "pair": "EURJPY",
     "side": "SSL",
     "top": 183.98561
+  },
+  "ZONE_USDCAD_SSL_1.42082": {
+    "fired_at": "2026-07-22T04:45:35.645994+00:00",
+    "type": "zone",
+    "pair": "USDCAD",
+    "side": "SSL",
+    "top": 1.42082
+  },
+  "SWEEP_USDCAD_202606292130": {
+    "fired_at": "2026-07-22T04:45:35.646041+00:00",
+    "type": "sweep",
+    "pair": "USDCAD",
+    "time": "2026-06-29T21:30:00+00:00"
+  },
+  "SIG_USDCAD_long_1.41992": {
+    "fired_at": "2026-07-22T04:45:35.646082+00:00",
+    "type": "signal",
+    "pair": "USDCAD",
+    "direction": "long",
+    "entry": 1.41992
   }
 }
