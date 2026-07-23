@@ -439,5 +439,25 @@
     "pair": "USDCAD",
     "side": "SSL",
     "top": 1.42082
+  },
+  "ZONE_AUDJPY_SSL_111.39460": {
+    "fired_at": "2026-07-23T00:00:41.343492+00:00",
+    "type": "zone",
+    "pair": "AUDJPY",
+    "side": "SSL",
+    "top": 111.3946
+  },
+  "SWEEP_AUDJPY_202606301045": {
+    "fired_at": "2026-07-23T00:00:41.343527+00:00",
+    "type": "sweep",
+    "pair": "AUDJPY",
+    "time": "2026-06-30T10:45:00+00:00"
+  },
+  "SIG_AUDJPY_long_111.383": {
+    "fired_at": "2026-07-23T00:00:41.343558+00:00",
+    "type": "signal",
+    "pair": "AUDJPY",
+    "direction": "long",
+    "entry": 111.38335
   }
 }
