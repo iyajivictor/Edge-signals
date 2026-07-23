@@ -466,12 +466,5 @@
     "type": "sweep",
     "pair": "AUDJPY",
     "time": "2026-06-30T23:30:00+00:00"
-  },
-  "SIG_AUDJPY_long_111.941": {
-    "fired_at": "2026-07-23T06:30:29.449870+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "long",
-    "entry": 111.94078
   }
 }
