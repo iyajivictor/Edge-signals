@@ -474,5 +474,25 @@
     "pair": "EURJPY",
     "side": "BSL",
     "top": 185.46546
+  },
+  "ZONE_EURUSD_SSL_1.14192": {
+    "fired_at": "2026-07-27T03:45:31.094159+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "SSL",
+    "top": 1.14192
+  },
+  "SWEEP_EURUSD_202607021800": {
+    "fired_at": "2026-07-27T03:45:31.094173+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-07-02T18:00:00+00:00"
+  },
+  "SIG_EURUSD_long_1.14115": {
+    "fired_at": "2026-07-27T03:45:31.094186+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.14115
   }
 }
