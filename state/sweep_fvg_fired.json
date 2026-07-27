@@ -468,23 +468,11 @@
     "side": "SSL",
     "top": 1.41975
   },
-  "SWEEP_USDCAD_202607010630": {
-    "fired_at": "2026-07-26T23:00:29.283170+00:00",
-    "type": "sweep",
-    "pair": "USDCAD",
-    "time": "2026-07-01T06:30:00+00:00"
-  },
   "ZONE_EURJPY_BSL_185.46546": {
     "fired_at": "2026-07-26T23:00:29.296956+00:00",
     "type": "zone",
     "pair": "EURJPY",
     "side": "BSL",
     "top": 185.46546
-  },
-  "SWEEP_EURJPY_202607011700": {
-    "fired_at": "2026-07-26T23:00:29.297010+00:00",
-    "type": "sweep",
-    "pair": "EURJPY",
-    "time": "2026-07-01T17:00:00+00:00"
   }
 }
