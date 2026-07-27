@@ -487,12 +487,5 @@
     "type": "sweep",
     "pair": "EURUSD",
     "time": "2026-07-02T18:00:00+00:00"
-  },
-  "SIG_EURUSD_long_1.14115": {
-    "fired_at": "2026-07-27T03:45:31.094186+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.14115
   }
 }
