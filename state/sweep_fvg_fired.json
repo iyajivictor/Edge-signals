@@ -494,12 +494,5 @@
     "type": "sweep",
     "pair": "CADJPY",
     "time": "2026-07-03T08:30:00+00:00"
-  },
-  "SIG_CADJPY_long_113.641": {
-    "fired_at": "2026-07-29T01:00:37.401868+00:00",
-    "type": "signal",
-    "pair": "CADJPY",
-    "direction": "long",
-    "entry": 113.64145
   }
 }
