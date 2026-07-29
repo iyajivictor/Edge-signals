@@ -508,12 +508,5 @@
     "type": "sweep",
     "pair": "USDCAD",
     "time": "2026-07-03T09:30:00+00:00"
-  },
-  "SIG_USDCAD_long_1.41867": {
-    "fired_at": "2026-07-29T06:45:34.775152+00:00",
-    "type": "signal",
-    "pair": "USDCAD",
-    "direction": "long",
-    "entry": 1.41867
   }
 }
