@@ -502,5 +502,25 @@
     "pair": "USDCAD",
     "side": "SSL",
     "top": 1.41909
+  },
+  "ZONE_GBPUSD_BSL_1.33642": {
+    "fired_at": "2026-07-30T13:45:25.991797+00:00",
+    "type": "zone",
+    "pair": "GBPUSD",
+    "side": "BSL",
+    "top": 1.33642
+  },
+  "SWEEP_GBPUSD_202607090100": {
+    "fired_at": "2026-07-30T13:45:25.991833+00:00",
+    "type": "sweep",
+    "pair": "GBPUSD",
+    "time": "2026-07-09T01:00:00+00:00"
+  },
+  "SIG_GBPUSD_short_1.33664": {
+    "fired_at": "2026-07-30T13:45:25.991864+00:00",
+    "type": "signal",
+    "pair": "GBPUSD",
+    "direction": "short",
+    "entry": 1.33664
   }
 }
