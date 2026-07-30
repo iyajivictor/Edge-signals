@@ -515,12 +515,5 @@
     "type": "sweep",
     "pair": "GBPUSD",
     "time": "2026-07-09T01:00:00+00:00"
-  },
-  "SIG_GBPUSD_short_1.33664": {
-    "fired_at": "2026-07-30T13:45:25.991864+00:00",
-    "type": "signal",
-    "pair": "GBPUSD",
-    "direction": "short",
-    "entry": 1.33664
   }
 }
