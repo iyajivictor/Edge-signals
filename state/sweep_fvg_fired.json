@@ -509,5 +509,25 @@
     "pair": "GBPUSD",
     "side": "BSL",
     "top": 1.33642
+  },
+  "ZONE_EURUSD_SSL_1.14241": {
+    "fired_at": "2026-08-02T23:00:29.322572+00:00",
+    "type": "zone",
+    "pair": "EURUSD",
+    "side": "SSL",
+    "top": 1.14241
+  },
+  "SWEEP_EURUSD_202607090300": {
+    "fired_at": "2026-08-02T23:00:29.322620+00:00",
+    "type": "sweep",
+    "pair": "EURUSD",
+    "time": "2026-07-09T03:00:00+00:00"
+  },
+  "SIG_EURUSD_long_1.14177": {
+    "fired_at": "2026-08-02T23:00:29.322665+00:00",
+    "type": "signal",
+    "pair": "EURUSD",
+    "direction": "long",
+    "entry": 1.14177
   }
 }
