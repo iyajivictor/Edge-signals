@@ -537,13 +537,6 @@
     "pair": "EURUSD",
     "time": "2026-07-09T03:15:00+00:00"
   },
-  "SIG_EURUSD_long_1.14240": {
-    "fired_at": "2026-08-04T03:15:28.863010+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "long",
-    "entry": 1.1424
-  },
   "ZONE_USDCAD_SSL_1.41944": {
     "fired_at": "2026-08-04T04:00:47.772767+00:00",
     "type": "zone",
