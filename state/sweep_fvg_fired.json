@@ -551,13 +551,6 @@
     "pair": "EURJPY",
     "time": "2026-07-31T01:15:00+00:00"
   },
-  "SIG_EURJPY_long_183.529": {
-    "fired_at": "2026-08-05T06:30:37.607176+00:00",
-    "type": "signal",
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 183.52926
-  },
   "ZONE_EURJPY_SSL_183.71669": {
     "fired_at": "2026-08-05T06:30:37.607757+00:00",
     "type": "zone",
@@ -570,12 +563,5 @@
     "type": "sweep",
     "pair": "EURJPY",
     "time": "2026-07-31T01:45:00+00:00"
-  },
-  "SIG_EURJPY_long_183.868": {
-    "fired_at": "2026-08-05T06:30:37.607788+00:00",
-    "type": "signal",
-    "pair": "EURJPY",
-    "direction": "long",
-    "entry": 183.86768
   }
 }
