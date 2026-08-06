@@ -564,12 +564,5 @@
     "type": "sweep",
     "pair": "EURUSD",
     "time": "2026-07-15T01:30:00+00:00"
-  },
-  "SIG_EURUSD_short_1.14394": {
-    "fired_at": "2026-08-06T04:00:39.254582+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "short",
-    "entry": 1.14394
   }
 }
