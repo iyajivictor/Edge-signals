@@ -585,12 +585,5 @@
     "type": "sweep",
     "pair": "AUDJPY",
     "time": "2026-08-12T23:45:00+00:00"
-  },
-  "SIG_AUDJPY_short_112.639": {
-    "fired_at": "2026-08-17T00:00:39.294027+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "short",
-    "entry": 112.63923
   }
 }
