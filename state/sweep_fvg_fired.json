@@ -629,24 +629,12 @@
     "side": "SSL",
     "top": 158.76633
   },
-  "SWEEP_USDJPY_202608102200": {
-    "fired_at": "2026-08-26T03:00:28.708290+00:00",
-    "type": "sweep",
-    "pair": "USDJPY",
-    "time": "2026-08-10T22:00:00+00:00"
-  },
   "ZONE_AUDJPY_BSL_114.11392": {
     "fired_at": "2026-08-26T03:00:28.724581+00:00",
     "type": "zone",
     "pair": "AUDJPY",
     "side": "BSL",
     "top": 114.11392
-  },
-  "SWEEP_AUDJPY_202607291045": {
-    "fired_at": "2026-08-26T03:00:28.724616+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-07-29T10:45:00+00:00"
   },
   "ZONE_AUDJPY_SSL_113.99074": {
     "fired_at": "2026-08-26T03:00:28.725596+00:00",
@@ -655,23 +643,11 @@
     "side": "SSL",
     "top": 113.99074
   },
-  "SWEEP_AUDJPY_202608240000": {
-    "fired_at": "2026-08-26T03:00:28.725618+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-08-24T00:00:00+00:00"
-  },
   "ZONE_XAUUSD_SSL_4634.99421": {
     "fired_at": "2026-08-26T03:00:28.739729+00:00",
     "type": "zone",
     "pair": "XAUUSD",
     "side": "SSL",
     "top": 4634.99421
-  },
-  "SWEEP_XAUUSD_202608240945": {
-    "fired_at": "2026-08-26T03:00:28.739769+00:00",
-    "type": "sweep",
-    "pair": "XAUUSD",
-    "time": "2026-08-24T09:45:00+00:00"
   }
 }
