@@ -593,13 +593,6 @@
     "pair": "EURUSD",
     "time": "2026-08-20T23:30:00+00:00"
   },
-  "SIG_EURUSD_short_1.16841": {
-    "fired_at": "2026-08-26T00:01:43.264533+00:00",
-    "type": "signal",
-    "pair": "EURUSD",
-    "direction": "short",
-    "entry": 1.16841
-  },
   "ZONE_USDJPY_SSL_158.39071": {
     "fired_at": "2026-08-26T00:01:43.294211+00:00",
     "type": "zone",
@@ -612,13 +605,6 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-08-07T01:00:00+00:00"
-  },
-  "SIG_USDJPY_long_158.328": {
-    "fired_at": "2026-08-26T00:01:43.294286+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.32817
   },
   "ZONE_USDJPY_SSL_159.20298": {
     "fired_at": "2026-08-26T00:01:43.295336+00:00",
@@ -633,13 +619,6 @@
     "pair": "USDJPY",
     "time": "2026-08-11T03:00:00+00:00"
   },
-  "SIG_USDJPY_long_159.078": {
-    "fired_at": "2026-08-26T00:01:43.295407+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 159.07833
-  },
   "ZONE_USDJPY_SSL_158.64360": {
     "fired_at": "2026-08-26T00:01:43.296486+00:00",
     "type": "zone",
@@ -652,13 +631,6 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-08-20T23:00:00+00:00"
-  },
-  "SIG_USDJPY_long_158.751": {
-    "fired_at": "2026-08-26T00:01:43.296559+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.75133
   },
   "ZONE_CADJPY_BSL_115.07146": {
     "fired_at": "2026-08-26T00:01:43.336672+00:00",
@@ -673,13 +645,6 @@
     "pair": "CADJPY",
     "time": "2026-08-18T23:30:00+00:00"
   },
-  "SIG_CADJPY_short_115.073": {
-    "fired_at": "2026-08-26T00:01:43.336746+00:00",
-    "type": "signal",
-    "pair": "CADJPY",
-    "direction": "short",
-    "entry": 115.07324
-  },
   "ZONE_CADJPY_SSL_114.76440": {
     "fired_at": "2026-08-26T00:01:43.337739+00:00",
     "type": "zone",
@@ -692,12 +657,5 @@
     "type": "sweep",
     "pair": "CADJPY",
     "time": "2026-07-31T13:00:00+00:00"
-  },
-  "SIG_CADJPY_long_114.618": {
-    "fired_at": "2026-08-26T00:01:43.337783+00:00",
-    "type": "signal",
-    "pair": "CADJPY",
-    "direction": "long",
-    "entry": 114.61781
   }
 }
