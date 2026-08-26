@@ -635,13 +635,6 @@
     "pair": "USDJPY",
     "time": "2026-08-10T22:00:00+00:00"
   },
-  "SIG_USDJPY_long_158.814": {
-    "fired_at": "2026-08-26T03:00:28.708322+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "long",
-    "entry": 158.81412
-  },
   "ZONE_AUDJPY_BSL_114.11392": {
     "fired_at": "2026-08-26T03:00:28.724581+00:00",
     "type": "zone",
@@ -654,13 +647,6 @@
     "type": "sweep",
     "pair": "AUDJPY",
     "time": "2026-07-29T10:45:00+00:00"
-  },
-  "SIG_AUDJPY_short_114.180": {
-    "fired_at": "2026-08-26T03:00:28.724643+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "short",
-    "entry": 114.17999
   },
   "ZONE_AUDJPY_SSL_113.99074": {
     "fired_at": "2026-08-26T03:00:28.725596+00:00",
@@ -675,13 +661,6 @@
     "pair": "AUDJPY",
     "time": "2026-08-24T00:00:00+00:00"
   },
-  "SIG_AUDJPY_long_113.937": {
-    "fired_at": "2026-08-26T03:00:28.725636+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "long",
-    "entry": 113.9366
-  },
   "ZONE_XAUUSD_SSL_4634.99421": {
     "fired_at": "2026-08-26T03:00:28.739729+00:00",
     "type": "zone",
@@ -694,12 +673,5 @@
     "type": "sweep",
     "pair": "XAUUSD",
     "time": "2026-08-24T09:45:00+00:00"
-  },
-  "SIG_XAUUSD_long_4613.00": {
-    "fired_at": "2026-08-26T03:00:28.739811+00:00",
-    "type": "signal",
-    "pair": "XAUUSD",
-    "direction": "long",
-    "entry": 4612.99696
   }
 }
