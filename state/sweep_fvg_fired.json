@@ -663,18 +663,5 @@
     "pair": "XAUUSD",
     "side": "SSL",
     "top": 4620.64504
-  },
-  "SWEEP_XAUUSD_202608262330": {
-    "fired_at": "2026-08-27T02:45:32.093746+00:00",
-    "type": "sweep",
-    "pair": "XAUUSD",
-    "time": "2026-08-26T23:30:00+00:00"
-  },
-  "SIG_XAUUSD_long_4616.07": {
-    "fired_at": "2026-08-27T02:45:32.093800+00:00",
-    "type": "signal",
-    "pair": "XAUUSD",
-    "direction": "long",
-    "entry": 4616.07313
   }
 }
