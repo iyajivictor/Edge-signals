@@ -698,5 +698,25 @@
     "pair": "EURJPY",
     "side": "SSL",
     "top": 185.34599
+  },
+  "ZONE_EURJPY_SSL_185.84551": {
+    "fired_at": "2026-09-06T23:45:25.338395+00:00",
+    "type": "zone",
+    "pair": "EURJPY",
+    "side": "SSL",
+    "top": 185.84551
+  },
+  "SWEEP_EURJPY_202608210400": {
+    "fired_at": "2026-09-06T23:45:25.338472+00:00",
+    "type": "sweep",
+    "pair": "EURJPY",
+    "time": "2026-08-21T04:00:00+00:00"
+  },
+  "SIG_EURJPY_long_185.728": {
+    "fired_at": "2026-09-06T23:45:25.338528+00:00",
+    "type": "signal",
+    "pair": "EURJPY",
+    "direction": "long",
+    "entry": 185.72806
   }
 }
