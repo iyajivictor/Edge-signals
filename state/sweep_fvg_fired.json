@@ -732,12 +732,5 @@
     "type": "sweep",
     "pair": "USDJPY",
     "time": "2026-08-19T10:00:00+00:00"
-  },
-  "SIG_USDJPY_short_159.520": {
-    "fired_at": "2026-09-16T05:15:24.396483+00:00",
-    "type": "signal",
-    "pair": "USDJPY",
-    "direction": "short",
-    "entry": 159.51973
   }
 }
