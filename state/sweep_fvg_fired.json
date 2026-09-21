@@ -733,11 +733,5 @@
     "pair": "USDCAD",
     "side": "SSL",
     "top": 1.3765
-  },
-  "SWEEP_USDCAD_202608240500": {
-    "fired_at": "2026-09-20T23:00:28.907020+00:00",
-    "type": "sweep",
-    "pair": "USDCAD",
-    "time": "2026-08-24T05:00:00+00:00"
   }
 }
