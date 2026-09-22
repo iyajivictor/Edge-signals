@@ -740,18 +740,5 @@
     "pair": "AUDJPY",
     "side": "SSL",
     "top": 113.92018
-  },
-  "SWEEP_AUDJPY_202608250945": {
-    "fired_at": "2026-09-22T01:45:26.985351+00:00",
-    "type": "sweep",
-    "pair": "AUDJPY",
-    "time": "2026-08-25T09:45:00+00:00"
-  },
-  "SIG_AUDJPY_long_113.822": {
-    "fired_at": "2026-09-22T01:45:26.985390+00:00",
-    "type": "signal",
-    "pair": "AUDJPY",
-    "direction": "long",
-    "entry": 113.82228
   }
 }
