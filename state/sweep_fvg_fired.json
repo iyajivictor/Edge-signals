@@ -761,5 +761,25 @@
     "pair": "USDCAD",
     "side": "BSL",
     "top": 1.38671
+  },
+  "ZONE_CADJPY_SSL_114.98904": {
+    "fired_at": "2026-09-24T06:30:26.325316+00:00",
+    "type": "zone",
+    "pair": "CADJPY",
+    "side": "SSL",
+    "top": 114.98904
+  },
+  "SWEEP_CADJPY_202608272130": {
+    "fired_at": "2026-09-24T06:30:26.325353+00:00",
+    "type": "sweep",
+    "pair": "CADJPY",
+    "time": "2026-08-27T21:30:00+00:00"
+  },
+  "SIG_CADJPY_long_114.861": {
+    "fired_at": "2026-09-24T06:30:26.325377+00:00",
+    "type": "signal",
+    "pair": "CADJPY",
+    "direction": "long",
+    "entry": 114.86053
   }
 }
